@@ -60,17 +60,7 @@ const extension: IRenderMime.IExtension = {
   name: 'CSV',
   rendererFactory,
   rank: 0,
-  dataType: 'string',
-  fileTypes: [{
-      name: 'CSV',
-      mimeTypes: [MIME_TYPE],
-      extensions: ['.csv',]
-    }],
-  documentWidgetFactoryOptions: {
-    name: 'CSV',
-    primaryFileType: 'csv',
-    fileTypes: ['csv']
-}
+  dataType: 'string'
 };
 
 export default extension;
