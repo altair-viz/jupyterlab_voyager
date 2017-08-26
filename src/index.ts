@@ -10,7 +10,7 @@ import {
 /**
  * The default mime type for the extension.
  */
-const MIME_TYPE = 'csv';
+const MIME_TYPE = 'application/csv';
 
 
 /**
@@ -60,8 +60,17 @@ const extension: IRenderMime.IExtension = {
   name: 'CSV',
   rendererFactory,
   rank: 0,
-  dataType: 'string'
+  dataType: 'string',
+  fileTypes: [{
+      name: 'CSV',
+      mimeTypes: [MIME_TYPE],
+      extensions: ['.csv',]
+    }],
+  documentWidgetFactoryOptions: {
+    name: 'CSV',
+    primaryFileType: 'csv',
+    fileTypes: ['csv']
+}
 };
 
 export default extension;
-
