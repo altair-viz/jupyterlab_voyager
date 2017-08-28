@@ -17,6 +17,15 @@ A JupyterLab MIME renderer extension to view CSV and JSON data in [Voyager 2](ht
 jupyter labextension install jupyterlab_voyager
 ```
 
+You can also use this with the Docker base images:
+
+```Dockerfile
+FROM jupyter/minimal-notebook
+RUN jupyter labextension install jupyterlab_voyager
+CMD start.sh jupyter lab
+```
+
+
 Then right click on any `csv` or `json` file click "Open with...", then "Voyager".
 
 ## Development
