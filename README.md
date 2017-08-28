@@ -1,5 +1,7 @@
 # jupyterlab_voyager
 
+[![Build Status](https://travis-ci.org/saulshanabrook/jupyterlab_voyager.svg?branch=master)](https://travis-ci.org/saulshanabrook/jupyterlab_voyager)
+
 A JupyterLab MIME renderer extension to view CSV and JSON data in [Voyager 2](https://github.com/vega/voyager#voyager-2).
 
 ![Screen shot showing data file opened in Voyager in JupyterLab](./screen-shot.png)
