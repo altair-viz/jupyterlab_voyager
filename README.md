@@ -1,5 +1,7 @@
 # jupyterlab_voyager
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/saulshanabrook/jupyterlab_voyager.svg)](https://greenkeeper.io/)
+
 [![npm](https://img.shields.io/npm/v/jupyterlab_voyager.svg?style=flat-square)](https://www.npmjs.com/package/jupyterlab_voyager)
 [![Travis branch](https://img.shields.io/travis/saulshanabrook/jupyterlab_voyager/master.svg?style=flat-square)](https://travis-ci.org/saulshanabrook/jupyterlab_voyager)
 
