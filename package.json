@@ -33,7 +33,7 @@
     "datavoyager": "v2.0.0-alpha.12"
   },
   "devDependencies": {
-    "typescript": "~2.4.1",
+    "typescript": "~2.5.2",
     "watch": "^1.0.2"
   }
 }
