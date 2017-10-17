@@ -4,7 +4,7 @@
   "description": "A JupyterLab extension for rendering CSV",
   "author": "Saul Shanabrook <s.shanabrook@gmail.com>",
   "main": "lib/index.js",
-  "license": "BSD-3-Clause",  
+  "license": "BSD-3-Clause",
   "keywords": [
     "jupyter",
     "jupyterlab",
@@ -20,7 +20,7 @@
   },
   "scripts": {
     "build": "tsc",
-    "watch": "watch \"npm run build\" src --wait 10 --ignoreDotFiles",
+    "watch": "tsc -w",
     "prepublish": "npm run build",
     "extension:install": "jupyter labextension install jupyterlab_voyager",
     "extension:uninstall": "jupyter labextension uninstall  jupyterlab_voyager",
@@ -28,7 +28,7 @@
     "extension:disable": "jupyter labextension disable jupyterlab_voyager"
   },
   "dependencies": {
-    "@jupyterlab/rendermime-interfaces": "^0.3.1",
+    "@jupyterlab/rendermime-interfaces": "^0.4.1",
     "@phosphor/widgets": "^1.3.0",
     "datavoyager": "v2.0.0-alpha.12"
   },

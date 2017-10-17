@@ -37,11 +37,23 @@ yarn install
 jupyter labextension link .
 ```
 
-To rebuild the package and the JupyterLab app:
+Then rebuild these files on every change and start up jupyter so it reloads:
 
 ```bash
-yarn build
-jupyter lab build
+yarn watch
+# in new window
+jupyter lab --port=8889 --watch
+```
+
+Then every time you edit a Typescript file in this directory, you will get the
+updated version when you reload the Jupyter Lab page.
+
+## Docker
+
+If you have Docker version >= 17.09.0-ce installed, you can also do all of the above with
+
+```bash
+docker-compose up
 ```
 
 ## Future Work
