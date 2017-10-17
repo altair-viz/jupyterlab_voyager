@@ -8,4 +8,4 @@ RUN yarn install --frozen-lockfile --ignore-scripts && yarn cache clean
 VOLUME /home/jovyan/node_modules
 
 COPY --chown=jovyan:users . .
-RUN jupyter labextension link .
+RUN jupyter labextension link --no-build .
