@@ -2,3 +2,9 @@
 lib/
 node_modules/
 *.egg-info/
+.npm/
+.ipynb_checkpoints/
+.ipython
+.jupyter
+.local
+*.ipynb

@@ -41,19 +41,19 @@ class OutputWidget extends Widget implements IRenderMime.IRenderer {
     if (data === "") {
       // it is originally rendered a bunch of times with empty
       // data for some reason.
-      return Promise.resolve(undefined); 
+      return Promise.resolve(undefined);
     }
     try {
       const type = mimeTypesToVegaTypes[this._mimeType];
       const values = read(data, {type});
       // it might be better to create a voyager instance once in the constructor,
-      // then just call update data here. 
+      // then just call update data here.
       CreateVoyager(this.node, config, {values})
     } catch (e) {
       this.node.textContent = `Failed to load file into Voyager: ${e}`;
       throw e;
     }
-    return Promise.resolve(undefined);     
+    return Promise.resolve(undefined);
   }
 
   private _mimeType: string;
@@ -66,6 +66,7 @@ const fileTypes = ['csv', 'json'];
 
 export default {
   name: 'I don\'t know what this does',
+  id: 'voyager',
   rendererFactory: {
     safe: false,
     mimeTypes: Object.keys(mimeTypesToVegaTypes),
