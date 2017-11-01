@@ -52,7 +52,6 @@ class VoyagerPanel extends Widget implements DocumentRegistry.IReadyWidget {
     context.ready.then(_ => {
       const data = context.model.toString();
       const values = read(data, { type: fileType });
-      console.log("resolved");
       CreateVoyager(this.node, VoyagerPanel.config, { values });
     })
     this.title.label = PathExt.basename(context.path);
@@ -84,8 +83,8 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer) {
     // Handle state restoration.
     restorer.restore(tracker, {
       command: 'docmanager:open',
-      args: widget => ({ path: widget.context.path, factory: factoryName }),
-      name: widget => widget.options.fileName
+      args: (widget: VoyagerPanel) => ({ path: widget.options.context.path, factory: factoryName }),
+      name: (widget: VoyagerPanel) => widget.options.context.path
     });
 
     const factory = new VoyagerWidgetFactory(
@@ -102,6 +101,7 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer) {
     factory.widgetCreated.connect((sender, widget) => {
       // Track the widget.
       tracker.add(widget);
+
       if (ftObj) {
         if (ftObj.iconClass)
           widget.title.iconClass = ftObj.iconClass;
