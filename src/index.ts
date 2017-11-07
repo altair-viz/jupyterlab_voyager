@@ -26,7 +26,84 @@ import { CreateVoyager } from 'datavoyager/build/lib-voyager';
 import { VoyagerConfig } from 'datavoyager/build/models/config';
 import 'datavoyager/build/style.css';
 import { read } from 'vega-loader';
+import {Data} from 'vega-lite/build/src/data';
+import {
+  ServiceManager
+} from '@jupyterlab/services';
+import {
+  INotebookTracker, NotebookPanel, NotebookTracker
+} from '@jupyterlab/notebook';
+import {
+  CodeCell
+} from '@jupyterlab/cells';
 
+import {
+  ReadonlyJSONObject
+} from '@phosphor/coreutils';
+export namespace CommandIDs {
+  export
+  const JL_Voyager = 'voyager:Open';
+}
+
+function addCommands(app: JupyterLab, services: ServiceManager, tracker: NotebookTracker): void {
+  const { commands} = app;
+      // Get the current cellar widget and activate unless the args specify otherwise.
+      function getCurrent(args: ReadonlyJSONObject): NotebookPanel | null {
+        const widget = tracker.currentWidget;
+        const activate = args['activate'] !== false;     
+        if (activate && widget) {
+          app.shell.activateById(widget.id);
+        }
+        return widget;
+      }
+
+      commands.addCommand(CommandIDs.JL_Voyager, {
+        label: 'Open in Voyager',
+        caption: 'Open the datasource in Voyager',
+        execute: args => {
+          const cur = getCurrent(args);
+          if(cur){
+            var filename = cur.id+'_Voyager';
+            let cell = cur.notebook.activeCell;
+            if(cell.model.type==='code'){
+              let codeCell = (cur.notebook.activeCell as CodeCell);
+              let outputs = codeCell.model.outputs;
+              let i = 0;
+              //find the first altair image output of this cell,
+              //(if multiple output images in one cell, currently there's no method to locate, so only select the first one by default)
+              while(i<outputs.length){
+                if(!!outputs.get(i).data['application/vnd.vegalite.v1+json']){
+                  var JSONobject = (outputs.get(i).data['application/vnd.vegalite.v1+json'] as any).data;
+                  var wdg = new VoyagerPanel_DF(JSONobject, filename);
+                  wdg.id = filename;
+                  wdg.title.closable = true;
+                  wdg.title.iconClass = 'jp-JSONIcon';
+                  app.shell.addToMainArea(wdg);
+                  break;
+                }
+                i++;
+              }
+            }
+          }
+        }
+      });
+
+}
+
+class VoyagerPanel_DF extends Widget implements DocumentRegistry.IReadyWidget {
+  static config: VoyagerConfig  = {
+    // don't allow user to select another data source from Voyager UI
+    showDataSourceSelector: false
+  }
+  ready = Promise.resolve();
+
+  constructor(data: Data, fileName: string) {
+    super();
+    CreateVoyager(this.node, VoyagerPanel.config, data);
+    this.title.label = fileName
+  }
+
+}
 
 interface VoyagerPanelOptions {
   context: DocumentRegistry.IContext<DocumentRegistry.IModel>;
@@ -73,8 +150,16 @@ class VoyagerWidgetFactory extends ABCWidgetFactory<VoyagerPanel, DocumentRegist
 
 const fileTypes = ['csv', 'json'];
 
-function activate(app: JupyterLab, restorer: ILayoutRestorer) {
+function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookTracker) {
 
+  const services = app.serviceManager;  
+  addCommands(app, services, tracker);
+
+  //add context menu for altair image ouput
+  app.contextMenu.addItem({
+    command: CommandIDs.JL_Voyager,
+    selector: '.p-Widget.jp-RenderedVegaCommon.jp-RenderedVegaLite.vega-embed.jp-OutputArea-output'
+  });
 
   fileTypes.map(ft => {
     const factoryName = `Voyager (${ft})`;
@@ -116,7 +201,7 @@ const plugin: JupyterLabPlugin<void> = {
   // NPM package name : JS object name
   id: 'jupyterlab_voyager:plugin',
   autoStart: true,
-  requires: [ILayoutRestorer],
+  requires: [ILayoutRestorer, INotebookTracker],
   activate
 };
 export default plugin;
