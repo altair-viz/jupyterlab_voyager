@@ -1,81 +1,122 @@
 ///<reference path="./lib.d.ts"/>
+
 import {
-  IRenderMime
-} from '@jupyterlab/rendermime-interfaces';
+  PathExt
+} from '@jupyterlab/coreutils';
+import {
+  ILayoutRestorer,
+  JupyterLabPlugin,
+  JupyterLab
+} from '@jupyterlab/application';
+
+import {
+  InstanceTracker
+} from '@jupyterlab/apputils';
+
+import {
+  ABCWidgetFactory,
+  DocumentRegistry
+} from '@jupyterlab/docregistry';
 
 import {
   Widget
 } from '@phosphor/widgets';
 
-import {CreateVoyager} from 'datavoyager/build/lib-voyager';
-import {VoyagerConfig} from 'datavoyager/build/models/config';
+import { CreateVoyager } from 'datavoyager/build/lib-voyager';
+import { VoyagerConfig } from 'datavoyager/build/models/config';
 import 'datavoyager/build/style.css';
-import {read} from 'vega-loader';
+import { read } from 'vega-loader';
 
 
-const config: VoyagerConfig  = {
-  // don't allow user to select another data source from Voyager UI
-  showDataSourceSelector: false
+interface VoyagerPanelOptions {
+  context: DocumentRegistry.IContext<DocumentRegistry.IModel>;
+  fileType: string;
 }
 
-// We use vega-loader.read to parse the text into what vega needs,
-// because this is what voyager does:
-// https://github.com/vega/voyager/blob/6a02e85906956b811a1003c3ad299368d2b33a67/src/components/data-selector/index.tsx#L167
-//
-// So, we need to match up JupyterLab mimetypes with the format types
-// for vega
-const mimeTypesToVegaTypes: {[key: string]: string} = {
-  'application/json': 'json',
-  'text/csv': 'csv'
-}
+class VoyagerPanel extends Widget implements DocumentRegistry.IReadyWidget {
+  static config: VoyagerConfig = {
+    // don't allow user to select another data source from Voyager UI
+    showDataSourceSelector: false
+  }
+  // it would make sense to resolve this promise after we have parsed the data
+  // and created the Voyager component, but this will trigger an attempted
+  // cleanup of the spinner element, which will already have been deleted
+  // by the Voyager constructor and so will raise an exception.
+  // So instead we just never resolve this promise, which still gives us the
+  // spinner until Voyager overwrites the element.
+  public ready: Promise<void> = new Promise(() => { });;
 
-
-class OutputWidget extends Widget implements IRenderMime.IRenderer {
-  constructor(options: IRenderMime.IRendererOptions) {
+  constructor(public options: VoyagerPanelOptions) {
     super();
-    this._mimeType = options.mimeType;
+    const { context, fileType } = options;
+    context.ready.then(_ => {
+      const data = context.model.toString();
+      const values = read(data, { type: fileType });
+      CreateVoyager(this.node, VoyagerPanel.config, { values });
+    })
+    this.title.label = PathExt.basename(context.path);
   }
 
-  renderModel(model: IRenderMime.IMimeModel): Promise<void> {
-    const data = model.data[this._mimeType] as string;
-    if (data === "") {
-      // it is originally rendered a bunch of times with empty
-      // data for some reason.
-      return Promise.resolve(undefined); 
-    }
-    try {
-      const type = mimeTypesToVegaTypes[this._mimeType];
-      const values = read(data, {type});
-      // it might be better to create a voyager instance once in the constructor,
-      // then just call update data here. 
-      CreateVoyager(this.node, config, {values})
-    } catch (e) {
-      this.node.textContent = `Failed to load file into Voyager: ${e}`;
-      throw e;
-    }
-    return Promise.resolve(undefined);     
-  }
-
-  private _mimeType: string;
 }
 
+class VoyagerWidgetFactory extends ABCWidgetFactory<VoyagerPanel, DocumentRegistry.IModel> {
+  // pass fileType into constructor so we know what it is and can pass it to vega-loader
+  // to get the data
+  constructor(private fileType: string, options: DocumentRegistry.IWidgetFactoryOptions) {
+    super(options);
+  }
+  createNewWidget(context: DocumentRegistry.IContext<DocumentRegistry.IModel>): VoyagerPanel {
+    return new VoyagerPanel({ context, fileType: this.fileType });
+  }
 
-// create a new widget factory for each file type, so that the render factory get's a different
-// mime type for CSV and JSON
+}
+
 const fileTypes = ['csv', 'json'];
 
-export default {
-  name: 'I don\'t know what this does',
-  rendererFactory: {
-    safe: false,
-    mimeTypes: Object.keys(mimeTypesToVegaTypes),
-    createRenderer: options => new OutputWidget(options)
-  },
-  dataType: 'string',
-  documentWidgetFactoryOptions: fileTypes.map((primaryFileType) => ({
-    // name needs to be different or else there is an error
-    name: `Voyager (${primaryFileType})`,
-    primaryFileType,
-    fileTypes: [primaryFileType]
-  }))
-} as IRenderMime.IExtension;
+function activate(app: JupyterLab, restorer: ILayoutRestorer) {
+
+
+  fileTypes.map(ft => {
+    const factoryName = `Voyager (${ft})`;
+    const tracker = new InstanceTracker<VoyagerPanel>({ namespace: `voyager-${ft}` });
+
+    // Handle state restoration.
+    restorer.restore(tracker, {
+      command: 'docmanager:open',
+      args: (widget: VoyagerPanel) => ({ path: widget.options.context.path, factory: factoryName }),
+      name: (widget: VoyagerPanel) => widget.options.context.path
+    });
+
+    const factory = new VoyagerWidgetFactory(
+      ft,
+      {
+        name: factoryName,
+        fileTypes: [ft],
+        readOnly: true
+      }
+    );
+    app.docRegistry.addWidgetFactory(factory);
+    let ftObj = app.docRegistry.getFileType(ft);
+
+    factory.widgetCreated.connect((sender, widget) => {
+      // Track the widget.
+      tracker.add(widget);
+
+      if (ftObj) {
+        if (ftObj.iconClass)
+          widget.title.iconClass = ftObj.iconClass;
+        if (ftObj.iconLabel)
+          widget.title.iconLabel = ftObj.iconLabel;
+      }
+    });
+  });
+}
+
+const plugin: JupyterLabPlugin<void> = {
+  // NPM package name : JS object name
+  id: 'jupyterlab_voyager:plugin',
+  autoStart: true,
+  requires: [ILayoutRestorer],
+  activate
+};
+export default plugin;

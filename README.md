@@ -37,11 +37,29 @@ yarn install
 jupyter labextension link .
 ```
 
-To rebuild the package and the JupyterLab app:
+Then build the files and start Jupyter Lab:
 
 ```bash
-yarn build
-jupyter lab build
+yarn watch
+# in new window
+jupyter lab --port=8889 --watch
+```
+
+Reload the page to see new code changes.
+
+## Docker
+
+If you have Docker version >= 17.09.0-ce installed, you can also do all of the above with:
+
+```bash
+docker-compose up
+```
+
+If you change the installed packages, you have to remove the existing volume and rebuild the images:
+
+```bash
+docker-compose down -v
+docker-compose build
 ```
 
 ## Future Work

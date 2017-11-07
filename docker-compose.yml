@@ -1,0 +1,14 @@
+version: '3'
+services:
+  lab:
+    build: .
+    command: start.sh jupyter lab --port=8889 --watch
+    ports:
+     - "8889:8889"
+    volumes:
+      - ".:/home/jovyan"
+  build:
+    build: .
+    command: yarn watch
+    volumes:
+       - ".:/home/jovyan"
