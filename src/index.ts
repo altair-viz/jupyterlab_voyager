@@ -42,7 +42,9 @@ import {
 } from '@phosphor/coreutils';
 export namespace CommandIDs {
   export
-  const JL_Voyager = 'voyager:Open';
+  const JL_Graph_Voyager = 'graph_voyager:Open';
+  export
+  const JL_Table_Voyager = 'table_voyager:Open';
 }
 
 function addCommands(app: JupyterLab, services: ServiceManager, tracker: NotebookTracker): void {
@@ -57,7 +59,7 @@ function addCommands(app: JupyterLab, services: ServiceManager, tracker: Noteboo
         return widget;
       }
 
-      commands.addCommand(CommandIDs.JL_Voyager, {
+      commands.addCommand(CommandIDs.JL_Graph_Voyager, {
         label: 'Open in Voyager',
         caption: 'Open the datasource in Voyager',
         execute: args => {
@@ -68,6 +70,7 @@ function addCommands(app: JupyterLab, services: ServiceManager, tracker: Noteboo
             if(cell.model.type==='code'){
               let codeCell = (cur.notebook.activeCell as CodeCell);
               let outputs = codeCell.model.outputs;
+              console.log(outputs);
               let i = 0;
               //find the first altair image output of this cell,
               //(if multiple output images in one cell, currently there's no method to locate, so only select the first one by default)
@@ -75,6 +78,38 @@ function addCommands(app: JupyterLab, services: ServiceManager, tracker: Noteboo
                 if(!!outputs.get(i).data['application/vnd.vegalite.v1+json']){
                   var JSONobject = (outputs.get(i).data['application/vnd.vegalite.v1+json'] as any).data;
                   var wdg = new VoyagerPanel_DF(JSONobject, filename);
+                  wdg.id = filename;
+                  wdg.title.closable = true;
+                  wdg.title.iconClass = 'jp-JSONIcon';
+                  app.shell.addToMainArea(wdg);
+                  break;
+                }
+                i++;
+              }
+            }
+          }
+        }
+      });
+
+      commands.addCommand(CommandIDs.JL_Table_Voyager, {
+        label: 'Open in Voyager',
+        caption: 'Open the datasource in Voyager',
+        execute: args => {
+          const cur = getCurrent(args);
+          if(cur){
+            var filename = cur.id+'_Voyager';
+            let cell = cur.notebook.activeCell;
+            if(cell.model.type==='code'){
+              let codeCell = (cur.notebook.activeCell as CodeCell);
+              let outputs = codeCell.model.outputs;
+              console.log(outputs);
+              let i = 0;
+              //find the first altair image output of this cell,
+              //(if multiple output images in one cell, currently there's no method to locate, so only select the first one by default)
+              while(i<outputs.length){
+                if(!!outputs.get(i).data['application/vnd.dataresource+json']){
+                  var JSONobject = (outputs.get(i).data['application/vnd.dataresource+json'] as any).data;
+                  var wdg = new VoyagerPanel_DF({'values':JSONobject}, filename);
                   wdg.id = filename;
                   wdg.title.closable = true;
                   wdg.title.iconClass = 'jp-JSONIcon';
@@ -157,8 +192,13 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
 
   //add context menu for altair image ouput
   app.contextMenu.addItem({
-    command: CommandIDs.JL_Voyager,
+    command: CommandIDs.JL_Graph_Voyager,
     selector: '.p-Widget.jp-RenderedVegaCommon.jp-RenderedVegaLite.vega-embed.jp-OutputArea-output'
+  });
+  app.contextMenu.addItem({
+    command: CommandIDs.JL_Table_Voyager,
+    //selector: '.p-Widget.jp-RenderedHTMLCommon.jp-RenderedHTML.jp-mod-trusted.jp-OutputArea-output'
+    selector: '.dataframe'
   });
 
   fileTypes.map(ft => {
