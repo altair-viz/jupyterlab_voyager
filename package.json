@@ -28,7 +28,7 @@
     "extension:disable": "jupyter labextension disable jupyterlab_voyager"
   },
   "dependencies": {
-    "@jupyterlab/application": "0.11.1",
+    "@jupyterlab/application": "0.12.0",
     "@jupyterlab/rendermime-interfaces": "^0.4.1",
     "@phosphor/widgets": "^1.3.0",
     "datavoyager": "v2.0.0-alpha.12"
