@@ -1,3 +1,15 @@
 language: node_js
 node_js:
   - "node"
+install:
+  - yarn install
+  - jupyter labextension link .
+  - npm install -g cypress@1.0.3
+  - cypress verify
+before_script:
+  - yarn watch &
+  - jupyter lab --port=8889 --watch &
+  - sleep 20
+script:
+  - cypress run --record
+

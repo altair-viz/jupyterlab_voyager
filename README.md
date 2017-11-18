@@ -47,12 +47,38 @@ jupyter lab --port=8889 --watch
 
 Reload the page to see new code changes.
 
+### Testing
+
+First install cypress:
+
+```bash
+npm install -g cypress@1.0.3
+```
+
+Then you can run the tests:
+
+```bash
+cypress run
+```
+
+Or open Cypress for an interactive experience:
+
+```bash
+cypress open
+```
+
 ## Docker
 
 If you have Docker version >= 17.09.0-ce installed, you can also do all of the above with:
 
 ```bash
-docker-compose up
+docker-compose up lab
+```
+
+Then you can run the tests with:
+
+```bash
+docker-compose run --rm test
 ```
 
 If you change the installed packages, you have to remove the existing volume and rebuild the images:
