@@ -5,12 +5,12 @@ install:
   - sudo pip install jupyterlab==0.28.0
   - sudo jupyter serverextension enable --py jupyterlab --sys-prefix
   - yarn install
-  - jupyter labextension link .
+  - sudo jupyter labextension link .
   - npm install -g cypress@1.0.3
   - cypress verify
 before_script:
   - yarn watch &
-  - jupyter lab --port=8889 --watch &
+  - sudo jupyter lab --port=8889 --watch &
   - sleep 20
 script:
   - cypress run --record
