@@ -2,7 +2,7 @@ language: node_js
 node_js:
   - "node"
 install:
-  - pip install jupyterlab==0.28.0
+  - pip install --user jupyterlab==0.28.0
   - jupyter serverextension enable --py jupyterlab --sys-prefix
   - yarn install
   - jupyter labextension link .
