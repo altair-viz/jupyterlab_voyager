@@ -1,7 +1,7 @@
 # jupyterlab_voyager
 
 [![npm](https://img.shields.io/npm/v/jupyterlab_voyager.svg?style=flat-square)](https://www.npmjs.com/package/jupyterlab_voyager)
-[![Travis branch](https://img.shields.io/travis/saulshanabrook/jupyterlab_voyager/master.svg?style=flat-square)](https://travis-ci.org/saulshanabrook/jupyterlab_voyager)
+[![Build Status](https://travis-ci.org/altair-viz/jupyterlab_voyager.svg?branch=master)](https://travis-ci.org/altair-viz/jupyterlab_voyager)
 
 A JupyterLab MIME renderer extension to view CSV and JSON data in [Voyager 2](https://github.com/vega/voyager#voyager-2).
 
