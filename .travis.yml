@@ -11,6 +11,7 @@ install:
   - conda update -q conda
   # Useful for debugging any issues with conda
   - conda info -a
+  - conda update
   - conda install  -y jupyterlab=0.28.0
   - yarn install
   - jupyter labextension link .
