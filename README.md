@@ -30,9 +30,10 @@ Then right click on any `csv` or `json` file click "Open with...", then "Voyager
 
 ## Development
 
-For a development install (requires npm version 4 or later and yarn), do the following in the repository directory:
+For a development install (requires npm version 4 or later, yarn, and jupyterlab), do the following in the repository directory:
 
 ```bash
+
 yarn install
 jupyter labextension link .
 ```
