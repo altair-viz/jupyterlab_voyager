@@ -17,5 +17,5 @@ before_script:
   - jupyter lab --port=8889 --watch &
   - sleep 20
 script:
-  - cypress run --record
+  - cypress run
 
