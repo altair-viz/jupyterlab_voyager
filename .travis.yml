@@ -7,7 +7,7 @@ before_install:
   - conda update --yes conda
 install:
   - conda install -y -c anaconda-platform yarnpkg=0.27.5
-  - conda install -y jupyterlab=0.28.0
+  - conda install -y -c conda-forge jupyterlab=0.28.0
   - npm install -g cypress@1.0.3
   - export PATH=$PATH:$(npm bin)
   - cypress verify
