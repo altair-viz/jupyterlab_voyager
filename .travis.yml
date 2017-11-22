@@ -3,7 +3,7 @@ node_js:
   - "node"
 install:
   - sudo pip install jupyterlab==0.28.0
-  - sudo jupyter serverextension enable --py jupyterlab --sys-prefix
+  - sudo jupyter serverextension enable --py jupyterlab
   - yarn install
   - sudo jupyter labextension link .
   - npm install -g cypress@1.0.3
