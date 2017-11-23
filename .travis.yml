@@ -16,7 +16,7 @@ install:
 before_script:
   - yarn watch &
   - jupyter lab --port=8889 --watch &
-  - sleep 20
+  - sleep 60
 script:
   - cypress run
 
