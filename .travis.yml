@@ -2,13 +2,14 @@ language: python
 dist: trusty
 sudo: false
 before_install:
-  - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
+  - wget --nv http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
   - chmod +x miniconda.sh
   - ./miniconda.sh -b
   - export PATH=/home/travis/miniconda2/bin:$PATH
   - conda update --yes conda
 install:
   - conda install -y -c anaconda-platform yarnpkg=0.27.5
+  - npm config set loglevel warn
   - conda install -y -c conda-forge jupyterlab=0.28.0
   - npm install -g cypress@1.0.3
   - export PATH=$PATH:$(npm bin)
