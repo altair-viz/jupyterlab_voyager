@@ -20,5 +20,5 @@ before_script:
   - jupyter lab --port=8889 &
   - sleep 10
 script:
-  - cypress run
+  - cypress run --record
 
