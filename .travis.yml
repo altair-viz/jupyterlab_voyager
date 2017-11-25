@@ -6,7 +6,7 @@ before_install:
   - chmod +x miniconda.sh
   - ./miniconda.sh -b
   - export PATH=/home/travis/miniconda2/bin:$PATH
-  - conda update --yes conda
+  - conda update -q --yes conda
 install:
   - conda install -q -y -c anaconda-platform yarnpkg=0.27.5
   - npm config set loglevel warn
