@@ -1,4 +1,6 @@
 language: python
+dist: trusty
+sudo: false
 before_install:
   - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
   - chmod +x miniconda.sh
@@ -12,11 +14,9 @@ install:
   - export PATH=$PATH:$(npm bin)
   - cypress verify
   - yarn install --frozen-lockfile --ignore-scripts
-  - jupyter labextension link --no-build .
+  - jupyter labextension link .
 before_script:
-  - yarn watch &
-  - jupyter lab --port=8889 --watch &
-  - sleep 120
+  - jupyter lab --port=8889 &
 script:
   - cypress run
 
