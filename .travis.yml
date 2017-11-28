@@ -1,3 +1,24 @@
-language: node_js
-node_js:
-  - "node"
+language: python
+dist: trusty
+sudo: false
+before_install:
+  - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh  -nv
+  - chmod +x miniconda.sh
+  - ./miniconda.sh -b
+  - export PATH=/home/travis/miniconda2/bin:$PATH
+  - conda update -q --yes conda
+install:
+  - conda install -q -y -c anaconda-platform yarnpkg=0.27.5
+  - npm config set loglevel warn
+  - conda install -q -y -c conda-forge jupyterlab=0.28.0
+  - npm install --quiet -g cypress@1.0.3
+  - export PATH=$PATH:$(npm bin)
+  - cypress verify
+  - yarn install --frozen-lockfile --ignore-scripts
+  - jupyter labextension link .
+before_script:
+  - jupyter lab --port=8889 &
+  - sleep 10
+script:
+  - cypress run --record
+

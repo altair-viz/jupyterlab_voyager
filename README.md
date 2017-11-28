@@ -1,7 +1,7 @@
 # jupyterlab_voyager
 
 [![npm](https://img.shields.io/npm/v/jupyterlab_voyager.svg?style=flat-square)](https://www.npmjs.com/package/jupyterlab_voyager)
-[![Travis branch](https://img.shields.io/travis/saulshanabrook/jupyterlab_voyager/master.svg?style=flat-square)](https://travis-ci.org/saulshanabrook/jupyterlab_voyager)
+[![Build Status](https://travis-ci.org/altair-viz/jupyterlab_voyager.svg?branch=master)](https://travis-ci.org/altair-viz/jupyterlab_voyager)
 
 A JupyterLab MIME renderer extension to view CSV and JSON data in [Voyager 2](https://github.com/vega/voyager#voyager-2).
 
@@ -30,9 +30,10 @@ Then right click on any `csv` or `json` file click "Open with...", then "Voyager
 
 ## Development
 
-For a development install (requires npm version 4 or later and yarn), do the following in the repository directory:
+For a development install (requires npm version 4 or later, yarn, and jupyterlab), do the following in the repository directory:
 
 ```bash
+
 yarn install
 jupyter labextension link .
 ```
@@ -47,12 +48,38 @@ jupyter lab --port=8889 --watch
 
 Reload the page to see new code changes.
 
+### Testing
+
+First install cypress:
+
+```bash
+npm install -g cypress@1.0.3
+```
+
+Then you can run the tests:
+
+```bash
+cypress run
+```
+
+Or open Cypress for an interactive experience:
+
+```bash
+cypress open
+```
+
 ## Docker
 
 If you have Docker version >= 17.09.0-ce installed, you can also do all of the above with:
 
 ```bash
-docker-compose up
+docker-compose up lab
+```
+
+Then you can run the tests with:
+
+```bash
+docker-compose run --rm test
 ```
 
 If you change the installed packages, you have to remove the existing volume and rebuild the images:
