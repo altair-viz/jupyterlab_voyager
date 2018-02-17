@@ -92,9 +92,9 @@ class VoyagerPanel extends Widget implements DocumentRegistry.IReadyWidget {
   static config: VoyagerConfig = {
     // don't allow user to select another data source from Voyager UI
     showDataSourceSelector: false,
-    manualSpecificationOnly: true,
-    hideHeader: true,
-    hideFooter: true,
+    //manualSpecificationOnly: true,
+    //hideHeader: true,
+    //hideFooter: true,
 
   }
   public voyager_cur: Voyager;
