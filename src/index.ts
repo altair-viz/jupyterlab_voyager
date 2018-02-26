@@ -10,7 +10,7 @@ import {
 } from '@jupyterlab/application';
 
 import {
-  ICommandPalette,InstanceTracker
+  ICommandPalette,InstanceTracker//, Dialog, showDialog
 } from '@jupyterlab/apputils';
 
 import {
@@ -238,7 +238,7 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
   }
 
 
-  function createNew(cwd: string, data: any) {
+  function createNew(cwd: string, data: any, open:boolean) {
     return commands.execute('docmanager:new-untitled', {
       path: cwd, ext: '.vl.json', type: 'file'
     }).then(model => {
@@ -248,9 +248,11 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
         let context = docManager.contextForWidget(widget) as Context<DocumentRegistry.IModel>;
         context.model.fromJSON(data);
         context.save().then(()=>{
+          if(open){
             commands.execute('docmanager:open', {
             path: model.path, factory: `Voyager (json)`
-            })   
+            }) 
+          }  
         })
       });
     });
@@ -283,7 +285,7 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
                 fb = ll.next();
               }
               let path = (fb as any).model.path as string;
-              createNew(path, {data:JSONobject});
+              createNew(path, {data:JSONobject}, true);
               break;
             }
             i++;
@@ -319,7 +321,7 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
                 fb = ll.next();
               }
               let path = (fb as any).model.path as string;
-              createNew(path, {data:{'values':JSONobject}});
+              createNew(path, {data:{'values':JSONobject}}, true);
               break;
             }
             i++;
@@ -329,68 +331,21 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
 
     }
   });
-/*
-  function saveVoyagerReady(){
-    //let widget = tracker.currentWidget;
-    let ll = app.shell.widgets('main');
-    let widget = ll.next();
-    while(widget!=undefined&&!(widget as Widget).isHidden && !(widget as Widget).hasClass(Voyager_CLASS)){
-      widget = ll.next();
-    }
-    if(widget&&widget.hasClass(Voyager_CLASS)){
-      return true;
-    }
-    else{
-      return false;
-    }
-}*/
 
   commands.addCommand(CommandIDs.JL_Voyager_Save, {
     label: 'Save Current Voyager',
     caption: 'Save the chart datasource as vl.json file',
     execute: args => {
-      /*
-      let widget = app.shell.currentWidget;
-      if(widget!=null){
-        console.log("mm is the current widget, its id is "+ widget.id);
-      }
-      else{
-        console.log("mm is null");
-      }
-*/
-
       let widget = app.shell.currentWidget;
       if(widget){
-         console.log('widget is valid: '+widget.id);
-          var datavoyager = (widget as VoyagerPanel).voyager_cur;
-          //let aps = datavoyager.getApplicationState();
-          let spec = datavoyager.getSpec(true);
-          let context = docManager.contextForWidget(widget) as Context<DocumentRegistry.IModel>;
-          context.model.fromJSON(spec);
-          context.save()
-          /*
-          console.log("1. "+ aps.bookmark.list);
-          console.log("2. "+ aps.config.serverUrl);
-          console.log("3. "+ aps.customWildcardFields);
-          console.log("4. "+ aps.dataset.data.values[0].x);
-          console.log("5. "+ aps.log.errors);
-          console.log("6. "+ aps.relatedViews.isHidden);
-          console.log("7. "+ aps.result);
-          console.log("8. "+ aps.shelf);
-          console.log("9. "+ aps.shelfPreview);
-          console.log("10. "+ aps.tableschema.primaryKey);
-
-          console.log("1. "+ spec.data);
-          console.log("2. "+ spec.description);
-          console.log("3. "+ spec.encoding);
-          console.log("4. "+ spec.height);
-          console.log("5. "+ spec.mark);
-          console.log("6. "+ spec.name);
-          console.log("7. "+ spec.selection);
-          console.log("8. "+ spec.title);
-          console.log("9. "+ spec.transform);
-          console.log("10. "+ spec.width);
-          */
+        var datavoyager = (widget as VoyagerPanel).voyager_cur;
+        var dataSrc = (widget as VoyagerPanel).data_src;
+        //let aps = datavoyager.getApplicationState();
+        let spec = datavoyager.getSpec(false);
+        let context = docManager.contextForWidget(widget) as Context<DocumentRegistry.IModel>;
+        context.model.fromJSON({"data":dataSrc, "mark": spec.mark, "encoding": spec.encoding});
+        //context.model.fromJSON(spec);
+        context.save();
       }
     },
     isEnabled: () =>{      
@@ -409,76 +364,6 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
     caption: 'Save the chart datasource as vl.json file',
     execute: args => {
       let widget = app.shell.currentWidget;
-      if(widget!=null){
-        console.log("app.shell.currentWidget is the current widget, its id is "+ widget.id);
-        if(widget.hasClass(Voyager_CLASS)){
-          console.log("app.shell.currentWidget,  current widget has Voyager_class, its path is "+(widget as VoyagerPanel).context.path);
-          console.log("app.shell.currentWidget,  current widget has Voyager_class, its fileType is "+(widget as VoyagerPanel).fileType);
-        }
-        else{
-          console.log("app.shell.currentWidget ,current widget has NO Voyager_class, its class is "+widget.title);
-        }
-      }
-      else{
-        console.log("app.shell.currentWidget  is null");
-      }
-
-      widget = app.shell.activeWidget;
-      if(widget!=null){
-        console.log("app.shell.activeWidget is the current widget, its id is "+ widget.id);
-        if(widget.hasClass(Voyager_CLASS)){
-          console.log("app.shell.activeWidget,  current widget has Voyager_class, its path is "+(widget as VoyagerPanel).context.path);
-        }
-        else{
-          console.log("app.shell.activeWidget ,current widget has NO Voyager_class, its class is "+widget.title);
-        }
-      }
-      else{
-        console.log("app.shell.activeWidget  is null");
-      }
-/*
-      widget = tracker1.currentWidget;
-      if(widget!=null){
-        console.log("tracker1.currentWidget is the current widget, its id is "+ widget.id);
-        if(widget.hasClass(Voyager_CLASS)){
-          console.log("tracker1.currentWidget,  current widget has Voyager_class, its path is "+(widget as VoyagerPanel).context.path);
-        }
-        else{
-          console.log("tracker1.currentWidget ,current widget has NO Voyager_class, its class is "+widget.title);
-        }
-      }
-      else{
-        console.log("tracker1.currentWidget  is null");
-      }
-*/
-      widget = tracker.currentWidget;
-      if(widget!=null){
-        console.log("tracker.currentWidget is the current widget, its id is "+ widget.id);
-        if(widget.hasClass(Voyager_CLASS)){
-          console.log("tracker.currentWidget,  current widget has Voyager_class its path is "+(widget as VoyagerPanel).context.path);
-        }
-        else{
-          console.log("tracker.currentWidget ,current widget has NO Voyager_class, its class is "+widget.title);
-        }
-      }
-      else{
-        console.log("tracker.currentWidget  is null");
-      }
-
-
-      let ll = app.shell.widgets('main');
-      let widget1 = ll.next();
-      while(!(widget1 as Widget).isHidden && !(widget1 as Widget).hasClass(Voyager_CLASS)){
-        widget1 = ll.next();
-      }
-      console.log('here is the widget11111:  ')
-      if(widget1&&widget1.hasClass(Voyager_CLASS)){
-        console.log("Searched Widget, current widget 1 has Voyager_class");
-      }
-      else{
-        console.log("Searched Widget, current widget 1 has NO Voyager_class, its class is ");
-      }
-      widget = app.shell.currentWidget;
       
       if(widget){
           var datavoyager = (widget as VoyagerPanel).voyager_cur;
@@ -488,10 +373,61 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
           let context = docManager.contextForWidget(widget) as Context<DocumentRegistry.IModel>;
           context.model.fromJSON({"data":dataSrc, "mark": spec.mark, "encoding": spec.encoding});
           //context.model.fromJSON(spec);
-          context.saveAs()
+          context.saveAs();
+          /*
+          getSavePath(context.path).then(PATH=>{
+            if(PATH){
+              createNew(PATH, {data:{"data":dataSrc, "mark": spec.mark, "encoding": spec.encoding}}, false);
+            }
+          });
+*/
+          
       }
     },
+    isEnabled: () =>{      
+      let widget = app.shell.currentWidget;
+      if(widget&&widget.hasClass(Voyager_CLASS)){
+        return true;
+      }
+      else{
+        return false;
+      }
+    }
   });
+/*
+  function getSavePath(path: string): Promise<string | undefined> {
+    let saveBtn = Dialog.okButton({ label: 'SAVE' });
+    return showDialog({
+      title: 'Save File As..',
+      body: new SaveWidget(path),
+      buttons: [Dialog.cancelButton(), saveBtn]
+    }).then(result => {
+      if (result.button.label === 'SAVE') {
+        return result.value as string;
+      }
+      return;
+    });
+  }
+*/
+  /*
+   * A widget that gets a file path from a user.
+   
+  class SaveWidget extends Widget {
+
+    constructor(path: string) {
+      super({ node: createSaveNode(path) });
+    }
+
+    getValue(): string {
+      return (this.node as HTMLInputElement).value;
+    }
+  }
+
+  function createSaveNode(path: string): HTMLElement {
+    let input = document.createElement('input');
+    input.value = path;
+    return input;
+  }*/
 
   let menu = new Menu({commands});
   menu.title.label = "Voyager";
@@ -575,7 +511,6 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
     });
     
   });
-  //return tracker1;
 }
 
 //const plugin: JupyterLabPlugin<InstanceTracker<VoyagerPanel>> = {
