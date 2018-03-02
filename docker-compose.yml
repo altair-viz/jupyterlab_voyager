@@ -2,18 +2,18 @@ version: '3'
 services:
   lab:
     build: .
-    command: start.sh jupyter lab --port=8889 --watch
+    command: jupyter lab --port=8889 --watch --ip='*' --allow-root
     ports:
      - "8889:8889"
     volumes:
-      - ".:/home/jovyan"
+      - ".:/jupyterlab_voyager"
     depends_on:
       - build
   build:
     build: .
     command: yarn watch
     volumes:
-       - ".:/home/jovyan"
+       - ".:/jupyterlab_voyager"
   test:
     build:
       context: .

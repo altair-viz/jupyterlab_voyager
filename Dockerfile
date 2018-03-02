@@ -1,9 +1,15 @@
-FROM jupyter/minimal-notebook:92fe05d1e7e5
-RUN conda install -y -c anaconda-platform yarnpkg=1.3.2 && conda clean -tipsy
+FROM continuumio/miniconda3
+RUN conda update -y -n base conda
+RUN conda install -y -c conda-forge \
+    yarn=1.3.2 \
+    jupyterlab=0.31.10 \
+    notebook=5.4.0 \
+&& conda clean -tipsy
 
-COPY --chown=jovyan:users yarn.lock package.json ./
+WORKDIR /jupyterlab_voyager
+COPY yarn.lock package.json ./
 RUN yarn install --frozen-lockfile --ignore-scripts && yarn cache clean
-VOLUME /home/jovyan/node_modules
+VOLUME /jupyterlab_voyager/node_modules
 
-COPY --chown=jovyan:users . .
+COPY . .
 RUN jupyter labextension link --no-build .
