@@ -103,7 +103,7 @@ class VoyagerPanel extends Widget implements DocumentRegistry.IReadyWidget {
     hideFooter: true,
 
   }
-  public voyager_cur: Voyager;
+  public voyager_cur: Voyager | undefined;
   public data_src:any;
   public fileType: String;
   // it would make sense to resolve this promise after we have parsed the data
@@ -154,7 +154,7 @@ class VoyagerPanel extends Widget implements DocumentRegistry.IReadyWidget {
         console.log('config '+values['config']);
 
         //update the specs if possible
-        this.voyager_cur.setSpec({'mark':values['mark'],'encoding':values['encoding']});
+        this.voyager_cur!.setSpec({'mark':values['mark'],'encoding':values['encoding']});
 
       }
       else{
@@ -341,7 +341,7 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
         var datavoyager = (widget as VoyagerPanel).voyager_cur;
         var dataSrc = (widget as VoyagerPanel).data_src;
         //let aps = datavoyager.getApplicationState();
-        let spec = datavoyager.getSpec(false);
+        let spec = datavoyager!.getSpec(false);
         let context = docManager.contextForWidget(widget) as Context<DocumentRegistry.IModel>;
         context.model.fromJSON({"data":dataSrc, "mark": spec.mark, "encoding": spec.encoding});
         //context.model.fromJSON(spec);
@@ -369,7 +369,7 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
           var datavoyager = (widget as VoyagerPanel).voyager_cur;
           var dataSrc = (widget as VoyagerPanel).data_src;
           //let aps = datavoyager.getApplicationState();
-          let spec = datavoyager.getSpec(false);
+          let spec = datavoyager!.getSpec(false);
           let context = docManager.contextForWidget(widget) as Context<DocumentRegistry.IModel>;
           context.model.fromJSON({"data":dataSrc, "mark": spec.mark, "encoding": spec.encoding});
           //context.model.fromJSON(spec);
@@ -482,7 +482,7 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
 
     // Handle state restoration.
     
-    restorer.restore(tracker1, {
+    restorer.restore(tracker1 as any, {
       command: 'docmanager:open',
       args: widget => ({ path: widget.context.path, factory: factoryName }),
       name: widget => widget.context.path
