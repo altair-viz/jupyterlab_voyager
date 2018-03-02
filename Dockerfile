@@ -1,7 +1,5 @@
-FROM jupyter/minimal-notebook:c54800018c2c
+FROM jupyter/minimal-notebook:92fe05d1e7e5
 RUN conda install -y -c anaconda-platform yarnpkg=1.3.2 && conda clean -tipsy
-
-
 
 COPY --chown=jovyan:users yarn.lock package.json ./
 RUN yarn install --frozen-lockfile --ignore-scripts && yarn cache clean

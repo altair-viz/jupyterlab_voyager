@@ -242,9 +242,9 @@
     "@phosphor/disposable" "^1.1.2"
     "@phosphor/widgets" "^1.5.0"
 
-"@jupyterlab/notebook@0.15.6":
-  version "0.15.6"
-  resolved "https://registry.yarnpkg.com/@jupyterlab/notebook/-/notebook-0.15.6.tgz#ae7a0fce0ff6a4eaf9adc8844925f3a428db3350"
+"@jupyterlab/notebook@0.15.7":
+  version "0.15.7"
+  resolved "https://registry.yarnpkg.com/@jupyterlab/notebook/-/notebook-0.15.7.tgz#e32ffe1dd859915ce4ce35d97971cb6a3158fd5b"
   dependencies:
     "@jupyterlab/apputils" "^0.15.5"
     "@jupyterlab/cells" "^0.15.4"
@@ -4772,9 +4772,9 @@ typescript@~2.1.5:
   version "2.1.6"
   resolved "https://registry.yarnpkg.com/typescript/-/typescript-2.1.6.tgz#40c7e6e9e5da7961b7718b55505f9cac9487a607"
 
-typescript@~2.4.1:
-  version "2.4.2"
-  resolved "https://registry.yarnpkg.com/typescript/-/typescript-2.4.2.tgz#f8395f85d459276067c988aa41837a8f82870844"
+typescript@~2.7.2:
+  version "2.7.2"
+  resolved "https://registry.yarnpkg.com/typescript/-/typescript-2.7.2.tgz#2d615a1ef4aee4f574425cdff7026edf81919836"
 
 ua-parser-js@^0.7.9:
   version "0.7.17"
