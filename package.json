@@ -22,7 +22,7 @@
   "scripts": {
     "build": "tsc",
     "watch": "tsc -w",
-    "prepare": "npm run build",
+    "prepublishOnly": "npm run build",
     "extension:install": "jupyter labextension install jupyterlab_voyager",
     "extension:uninstall": "jupyter labextension uninstall  jupyterlab_voyager",
     "extension:enable": "jupyter labextension enable jupyterlab_voyager",
