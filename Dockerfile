@@ -3,6 +3,7 @@ FROM frolvlad/alpine-miniconda3:python3.6
 RUN conda install -y -c conda-forge yarn
 RUN apk add --no-cache bash
 RUN conda install -y jupyter
+RUN conda install -y -c conda-forge pandas
 RUN conda install -y -c conda-forge jupyterlab=0.31.10
 
 WORKDIR /jupyterlab_voyager
