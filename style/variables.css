@@ -1,0 +1,9 @@
+/*-----------------------------------------------------------------------------
+| Copyright (c) Jupyter Development Team.
+| Distributed under the terms of the Modified BSD License.
+|----------------------------------------------------------------------------*/
+
+:root {
+    --jp-Voyager-icon: url('./Images/VoyagerIcon.png');
+    --jp-Voyager-tutorial: url('./Images/tutorial.jpg')
+}

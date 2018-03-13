@@ -20,7 +20,7 @@ import {
 } from '@jupyterlab/docregistry';
 
 import {
-  IFileBrowserFactory
+  IFileBrowserFactory, FileBrowser
 } from '@jupyterlab/filebrowser';
 
 import {
@@ -52,8 +52,14 @@ import {
 } from '@jupyterlab/cells';
 
 import {
-  ReadonlyJSONObject,PromiseDelegate
+  ReadonlyJSONObject,PromiseDelegate,JSONExt
 } from '@phosphor/coreutils';
+
+import {VoyagerTutorialWidget} from './tutorial'
+
+import '../style/index.css';
+
+const VOYAGER_ICON = 'jp-VoyagerIcon';
 
 /**
  * The class name added to a datavoyager widget.
@@ -75,6 +81,11 @@ export namespace CommandIDs {
   const JL_Voyager_Save = 'voyager_graph:save';
   export
   const JL_Voyager_Save1 = 'voyager_graph:save1';
+  export
+  const JL_Voyager_Open = 'voyager_file:open';
+  export
+  const JL_Voyager_Tutorial = 'voyager_tutorial:open';
+
 }
 /**
  * A namespace for `VoyagerPanel` statics.
@@ -225,6 +236,8 @@ const fileTypes = ['csv', 'json', 'tsv', 'txt','vl.json'];
 function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookTracker,palette: ICommandPalette, docManager: IDocumentManager, browserFactory: IFileBrowserFactory,mainMenu: IMainMenu)/*: InstanceTracker<VoyagerPanel>*/{
 
   //let wdg:VoyagerPanel_DF;
+  // Declare a widget variable
+  let T_widget: VoyagerTutorialWidget;
   const { commands} = app;
 
   // Get the current cellar widget and activate unless the args specify otherwise.
@@ -429,10 +442,102 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
     return input;
   }*/
 
+  commands.addCommand(CommandIDs.JL_Voyager_Open, {
+    label: 'Open file in Voyager',
+    caption: 'Open the selected file(s) in Voyager',
+    execute: args => {
+      let ll = app.shell.widgets('left');
+      let fb = ll.next();
+      while((fb as any).id!='filebrowser'){
+        fb = ll.next();
+      }
+      let cur_fb = (fb as FileBrowser).selectedItems();
+      let target_file = cur_fb.next();     
+      while(target_file!==undefined&&target_file.type==='file'){
+        let target_file_ext = PathExt.extname(target_file.path);
+        console.log(target_file_ext)
+        switch(target_file_ext){
+          case '.json':
+            commands.execute('docmanager:open', {path: target_file.path, factory: `Voyager (json)`});
+            break; 
+          case '.csv':
+            commands.execute('docmanager:open', {path: target_file.path, factory: `Voyager (csv)`});
+            break;
+          case '.tsv':
+            commands.execute('docmanager:open', {path: target_file.path, factory: `Voyager (tsv)`});
+            break;
+        }
+        target_file=cur_fb.next();
+      }
+      
+    },
+
+    isEnabled: () =>{      
+      let ll = app.shell.widgets('left');
+      let fb = ll.next();
+      while((fb as any).id!='filebrowser'){
+        fb = ll.next();
+      }
+      let cur_fb = (fb as FileBrowser).selectedItems();
+      let target_file = cur_fb.next();     
+      if(target_file!==undefined&&target_file.type==='file'){
+        let target_file_ext = PathExt.extname(target_file.path);
+        switch(target_file_ext){
+          case '.json':
+            return true; 
+          case '.csv':
+            return true;
+          case '.tsv':
+            return true;
+          default:
+            return false;
+        }
+      }
+      else{
+        return false;
+      }
+    }
+    
+  });
+
+  // Track and restore the widget state
+  let tracker0 = new InstanceTracker<VoyagerTutorialWidget>({ namespace: 'xkcd' });
+    // Add an application command
+  const command: string = CommandIDs.JL_Voyager_Tutorial;
+  restorer.restore(tracker0, {
+    command,
+    args: () => JSONExt.emptyObject,
+    name: () => 'xkcd'
+  });
+  commands.addCommand(CommandIDs.JL_Voyager_Tutorial, {
+    label: 'Open Tutorial',
+    caption: 'Open tutorial page for JupyterLab_voyager',
+    execute: args => {
+      if (!T_widget) {
+        // Create a new widget if one does not exist
+        T_widget = new VoyagerTutorialWidget();
+        T_widget.update();
+      }
+      if (!tracker0.has(T_widget)) {
+        // Track the state of the widget for later restoration
+        tracker0.add(T_widget);
+      }
+      if (!T_widget.isAttached) {
+        // Attach the widget to the main area if it's not there
+        app.shell.addToMainArea(T_widget);
+      } else {
+        // Refresh the comic in the widget
+        T_widget.update();
+      }
+      // Activate the widget
+      app.shell.activateById(T_widget.id);
+    },
+  });
+
   let menu = new Menu({commands});
   menu.title.label = "Voyager";
   [
-    CommandIDs.JL_Voyager_Save,CommandIDs.JL_Voyager_Save1
+    CommandIDs.JL_Voyager_Open, CommandIDs.JL_Voyager_Save,CommandIDs.JL_Voyager_Save1,CommandIDs.JL_Voyager_Tutorial, 
   ].forEach(command =>{
     menu.addItem({command});
   });
@@ -502,9 +607,12 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
       // Track the widget.
       tracker1.add(widget);
       widget.context.pathChanged.connect(()=>{tracker1.save(widget);});
+      widget.title.iconClass = VOYAGER_ICON;
       if (ftObj) {
+        /*
         if (ftObj.iconClass)
           widget.title.iconClass = ftObj.iconClass;
+          */
         if (ftObj.iconLabel)
           widget.title.iconLabel = ftObj.iconLabel;
       }

@@ -1,0 +1,32 @@
+@import './variables.css';
+
+/*-----------------------------------------------------------------------------
+| Copyright (c) Jupyter Development Team.
+| Distributed under the terms of the Modified BSD License.
+|----------------------------------------------------------------------------*/
+.jp-VoyagerIcon {
+  min-width: 16px;
+  min-height: 16px;
+  background-size: 16px;
+  display: inline-block;
+  vertical-align: middle;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-image: var(--jp-Voyager-icon);
+}
+.jp-VoyagerTutorialWidget {
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+  background-repeat: no-repeat;
+  background-image: var(--jp-Voyager-tutorial);
+}
+
+.jp-VoyagerTutorialCartoon {
+  margin: auto;
+}
+
+.jp-VoyagerTutorialAttribution {
+  margin: 20px auto;
+}
+
