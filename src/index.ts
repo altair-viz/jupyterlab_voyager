@@ -109,9 +109,9 @@ class VoyagerPanel extends Widget implements DocumentRegistry.IReadyWidget {
   static config: VoyagerConfig = {
     // don't allow user to select another data source from Voyager UI
     showDataSourceSelector: false,
-    manualSpecificationOnly: true,
-    hideHeader: true,
-    hideFooter: true,
+   // manualSpecificationOnly: true,
+   // hideHeader: true,
+   // hideFooter: true,
 
   }
   public voyager_cur: Voyager;
@@ -354,9 +354,9 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
         var datavoyager = (widget as VoyagerPanel).voyager_cur;
         var dataSrc = (widget as VoyagerPanel).data_src;
         //let aps = datavoyager.getApplicationState();
-        let spec = datavoyager.getSpec(false);
+        //let spec = datavoyager.getSpec(false);
         let context = docManager.contextForWidget(widget) as Context<DocumentRegistry.IModel>;
-        context.model.fromJSON({"data":dataSrc, "mark": spec.mark, "encoding": spec.encoding});
+        context.model.fromJSON({"data":dataSrc});
         //context.model.fromJSON(spec);
         context.save();
       }
@@ -382,9 +382,9 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
           var datavoyager = (widget as VoyagerPanel).voyager_cur;
           var dataSrc = (widget as VoyagerPanel).data_src;
           //let aps = datavoyager.getApplicationState();
-          let spec = datavoyager.getSpec(false);
+          //let spec = datavoyager.getSpec(false);
           let context = docManager.contextForWidget(widget) as Context<DocumentRegistry.IModel>;
-          context.model.fromJSON({"data":dataSrc, "mark": spec.mark, "encoding": spec.encoding});
+          context.model.fromJSON({"data":dataSrc});
           //context.model.fromJSON(spec);
           context.saveAs();
           /*
