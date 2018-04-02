@@ -1044,13 +1044,13 @@ comment-json@^1.1.3:
   dependencies:
     json-parser "^1.0.0"
 
-compassql@0.19.15:
-  version "0.19.15"
-  resolved "https://registry.yarnpkg.com/compassql/-/compassql-0.19.15.tgz#6e3fbe8d107352c5f89d526b655c1215b9ae0444"
+compassql@0.19.18:
+  version "0.19.18"
+  resolved "https://registry.yarnpkg.com/compassql/-/compassql-0.19.18.tgz#69b6009b6a5bb93ef03b21415d62af867b9e4804"
   dependencies:
     datalib "~1.7.0"
     typescript-json-schema "^0.9.0"
-    vega-lite "2.0.0-beta.14"
+    vega-lite "2.0.0-rc1"
 
 component-classes@^1.2.5:
   version "1.2.6"
@@ -1494,12 +1494,12 @@ datalib@~1.7.0:
     sync-request "^2.1.0"
     topojson "^1.6.19"
 
-datavoyager@v2.0.0-alpha.12:
-  version "2.0.0-alpha.12"
-  resolved "https://registry.yarnpkg.com/datavoyager/-/datavoyager-2.0.0-alpha.12.tgz#2238e1154df50eb71a8584ae1725f6e8517f865a"
+datavoyager@v2.0.0-alpha.16:
+  version "2.0.0-alpha.16"
+  resolved "https://registry.yarnpkg.com/datavoyager/-/datavoyager-2.0.0-alpha.16.tgz#f99a4b023af7802b93bac7e73e54f204c10c506c"
   dependencies:
     ajv "^5.2.2"
-    compassql "0.19.15"
+    compassql "0.19.18"
     font-awesome "^4.7.0"
     font-awesome-sass-loader "^1.0.3"
     isomorphic-fetch "^2.2.1"
@@ -1516,8 +1516,10 @@ datavoyager@v2.0.0-alpha.12:
     react-dnd-html5-backend "^2.2.3"
     react-dom "^15.4.2"
     react-file-download "^0.3.4"
+    react-jsonschema-form "^0.49.0"
     react-modal "^2.0.6"
     react-redux "^5.0.2"
+    react-spinners "^0.0.30"
     react-split-pane "^0.1.58"
     react-tabs "^1.1.0"
     react-tether "^0.5.6"
@@ -1531,7 +1533,8 @@ datavoyager@v2.0.0-alpha.12:
     tslib "^1.5.0"
     vega "3.0.0-rc2"
     vega-datasets "^1.8.0"
-    vega-lite "2.0.0-beta.14"
+    vega-expression "^2.3.1"
+    vega-lite "2.0.0-rc1"
     vega-tooltip "^0.4.2"
 
 date-now@^0.1.4:
@@ -1628,6 +1631,10 @@ domhandler@^2.3.0:
   resolved "https://registry.yarnpkg.com/domhandler/-/domhandler-2.4.1.tgz#892e47000a99be55bbf3774ffea0561d8879c259"
   dependencies:
     domelementtype "1"
+
+domkit@^0.0.1:
+  version "0.0.1"
+  resolved "https://registry.yarnpkg.com/domkit/-/domkit-0.0.1.tgz#88399d586794efc1154fec6c22cfe50f19bd4dbb"
 
 domutils@^1.5.1:
   version "1.6.2"
@@ -2614,6 +2621,10 @@ jsonpointer@^4.0.0:
   version "4.0.1"
   resolved "https://registry.yarnpkg.com/jsonpointer/-/jsonpointer-4.0.1.tgz#4fd92cb34e0e9db3c89c8622ecf51f9b978c6cb9"
 
+jsonschema@^1.0.2:
+  version "1.2.2"
+  resolved "https://registry.yarnpkg.com/jsonschema/-/jsonschema-1.2.2.tgz#83ab9c63d65bf4d596f91d81195e78772f6452bc"
+
 jsprim@^1.2.2:
   version "1.4.1"
   resolved "https://registry.yarnpkg.com/jsprim/-/jsprim-1.4.1.tgz#313e66bc1e5cc06e438bc1b7499c2e5c56acb6a2"
@@ -2744,6 +2755,10 @@ lodash.mergewith@^4.6.0:
 lodash.tail@^4.1.1:
   version "4.1.1"
   resolved "https://registry.yarnpkg.com/lodash.tail/-/lodash.tail-4.1.1.tgz#d2333a36d9e7717c8ad2f7cacafec7c32b444664"
+
+lodash.topath@^4.5.2:
+  version "4.5.2"
+  resolved "https://registry.yarnpkg.com/lodash.topath/-/lodash.topath-4.5.2.tgz#3616351f3bba61994a0931989660bd03254fd009"
 
 lodash.uniq@^4.5.0:
   version "4.5.0"
@@ -3852,6 +3867,15 @@ react-file-download@^0.3.4:
   version "0.3.5"
   resolved "https://registry.yarnpkg.com/react-file-download/-/react-file-download-0.3.5.tgz#7a4e75874528806bfa53ddddd98b4da427d3a897"
 
+react-jsonschema-form@^0.49.0:
+  version "0.49.0"
+  resolved "https://registry.yarnpkg.com/react-jsonschema-form/-/react-jsonschema-form-0.49.0.tgz#58bf691eae2d016d5c23cb59512f2e74f54ac324"
+  dependencies:
+    jsonschema "^1.0.2"
+    lodash.topath "^4.5.2"
+    prop-types "^15.5.8"
+    setimmediate "^1.0.5"
+
 react-modal@^2.0.6:
   version "2.4.1"
   resolved "https://registry.yarnpkg.com/react-modal/-/react-modal-2.4.1.tgz#cb09b26711b148eb9f59cb180e1b7d82980ded05"
@@ -3873,6 +3897,12 @@ react-redux@^5.0.2:
     lodash-es "^4.2.0"
     loose-envify "^1.1.0"
     prop-types "^15.5.10"
+
+react-spinners@^0.0.30:
+  version "0.0.30"
+  resolved "https://registry.yarnpkg.com/react-spinners/-/react-spinners-0.0.30.tgz#dd2a2e16794c38f42e6da8f49aa16d9ceb338e7d"
+  dependencies:
+    domkit "^0.0.1"
 
 react-split-pane@^0.1.58:
   version "0.1.66"
@@ -4901,7 +4931,7 @@ vega-event-selector@2, vega-event-selector@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/vega-event-selector/-/vega-event-selector-2.0.0.tgz#6af8dc7345217017ceed74e9155b8d33bad05d42"
 
-vega-expression@2:
+vega-expression@2, vega-expression@^2.3.1:
   version "2.3.1"
   resolved "https://registry.yarnpkg.com/vega-expression/-/vega-expression-2.3.1.tgz#d802a329190bdeb999ce6d8083af56b51f686e83"
   dependencies:
@@ -4962,9 +4992,9 @@ vega-hierarchy@^2.1:
     vega-dataflow "3"
     vega-util "1"
 
-vega-lite@2.0.0-beta.14:
-  version "2.0.0-beta.14"
-  resolved "https://registry.yarnpkg.com/vega-lite/-/vega-lite-2.0.0-beta.14.tgz#a643e0a528806106bc6234c4c48c9de6bd545225"
+vega-lite@2.0.0-rc1:
+  version "2.0.0-rc1"
+  resolved "https://registry.yarnpkg.com/vega-lite/-/vega-lite-2.0.0-rc1.tgz#d3251ba9426d24b2a7b1cd59b1880302628700e6"
   dependencies:
     json-stable-stringify "^1.0.1"
     tslib "^1.7.1"
