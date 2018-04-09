@@ -158,17 +158,31 @@ class VoyagerPanel extends Widget implements DocumentRegistry.IReadyWidget {
           else if(DATA['values']){ //check if it's array value data source
            this.voyager_cur = CreateVoyager(this.node, VoyagerPanel.config, values['data']);
           }
+          else{//other conditions, just try to pass the value to voyager and wish the best
+            this.voyager_cur = CreateVoyager(this.node, VoyagerPanel.config, values['data']);
+            this.data_src = values['data'];
+          }
         }
         else{ //other conditions, just try to pass the value to voyager and wish the best
           this.voyager_cur = CreateVoyager(this.node, VoyagerPanel.config, { values });
           this.data_src = {values};
         }
-        console.log('mark": '+values['mark']);
-        console.log('encoding '+values['encoding']);
-        console.log('config '+values['config']);
+        //console.log('mark": '+values['mark']);
+        //console.log('encoding '+values['encoding']);
+        //console.log('config '+values['config']);
 
         //update the specs if possible
-        this.voyager_cur.setSpec({'mark':values['mark'],'encoding':values['encoding']});
+        this.voyager_cur.setSpec({
+            "mark": values['mark'], 
+            "encoding": values['encoding'], 
+            "height":values['height'], 
+            "width":values['width'], 
+            "description":values['description'],
+            "name":values['name'],
+            "selection":values['selection'],
+            "title":values['title'],
+            "transform":values['transform']
+        });
 
       }
       else{
@@ -297,7 +311,43 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
           console.log(outputs);
           let i = 0;
           //find the first altair image output of this cell,
-          //(if multiple output images in one cell, currently there's no method to locate, so only select the first one by default)
+          //(if multiple output images in one cell, currently there's no method to locate, so only select the first one by default)application/vnd.jupyter.stdout stdout doesn't have 'data' field
+          while(i<outputs.length){ 
+            if(!!outputs.get(i).data['application/vnd.vegalite.v2+json']){
+              if(!!(outputs.get(i).data['application/vnd.vegalite.v2+json'] as any).vconcat){
+                var JSONobject = (outputs.get(i).data['application/vnd.vegalite.v2+json'] as any).vconcat['0'];
+              }
+              else{
+                var JSONobject = (outputs.get(i).data['application/vnd.vegalite.v2+json'] as any);
+              }
+              console.log('type is application/vnd.vegalite.v2+json')
+              console.log(JSONobject)
+              let ll = app.shell.widgets('left');
+              let fb = ll.next();
+              while((fb as any).id!='filebrowser'){
+                fb = ll.next();
+              }
+              let path = (fb as any).model.path as string;
+              createNew(path, JSONobject, true);
+              break;
+            }
+            /*
+            else if(!!outputs.get(i).data['vconcat']){
+              var JSONobject = outputs.get(i).data['application/vnd.jupyter.stdout'];
+              console.log('type is application/vnd.jupyter.stdout');
+              console.log(JSONobject)
+              let ll = app.shell.widgets('left');
+              let fb = ll.next();
+              while((fb as any).id!='filebrowser'){
+                fb = ll.next();
+              }
+              let path = (fb as any).model.path as string;
+              createNew(path, {data:JSONobject}, true);
+              break;
+            }*/
+            i++;
+          }
+/*
           while(i<outputs.length){
             if(!!outputs.get(i).data['application/vnd.vegalite.v1+json']){
               var JSONobject = (outputs.get(i).data['application/vnd.vegalite.v1+json'] as any).data;
@@ -312,7 +362,8 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
               break;
             }
             i++;
-          }
+          }*/
+          
         }
       }
     }
@@ -369,7 +420,18 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
         //let aps = datavoyager.getApplicationState();
         let spec = datavoyager.getSpec(false);
         let context = docManager.contextForWidget(widget) as Context<DocumentRegistry.IModel>;
-        context.model.fromJSON({"data":dataSrc, "mark": spec.mark, "encoding": spec.encoding});
+        context.model.fromJSON({
+          "data":dataSrc, 
+          "mark": spec.mark, 
+          "encoding": spec.encoding, 
+          "height":spec.height, 
+          "width":spec.width, 
+          "description":spec.description,
+          "name":spec.name,
+          "selection":spec.selection,
+          "title":spec.title,
+          "transform":spec.transform
+        });
         //context.model.fromJSON(spec);
         context.save();
       }
@@ -397,7 +459,18 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
           //let aps = datavoyager.getApplicationState();
           let spec = datavoyager.getSpec(false);
           let context = docManager.contextForWidget(widget) as Context<DocumentRegistry.IModel>;
-          context.model.fromJSON({"data":dataSrc, "mark": spec.mark, "encoding": spec.encoding});
+          context.model.fromJSON({
+            "data":dataSrc, 
+            "mark": spec.mark, 
+            "encoding": spec.encoding, 
+            "height":spec.height, 
+            "width":spec.width, 
+            "description":spec.description,
+            "name":spec.name,
+            "selection":spec.selection,
+            "title":spec.title,
+            "transform":spec.transform
+          });
           //context.model.fromJSON(spec);
           context.saveAs();
           /*
@@ -513,7 +586,7 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
     
   });
 
-  function createNewNotebook(cwd: string, path:string, kernelName?:string) {
+  function createNewNotebook(cwd: string, name:string, kernelName?:string) {
     return commands.execute('docmanager:new-untitled', {
       path: cwd, type: 'notebook'
     }).then(model => {
@@ -531,16 +604,19 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
             "import altair as alt\n",
             "import pandas as pd\n",
             "import json\n",
-            `with open('${path}') as json_data:\n`,
+            `with open('${name}') as json_data:\n`,
             "\tdata_src = json.load(json_data)\n",
             "data = data_src['data']\n",
-            "encoding = data_src['encoding']\n",
-            "mark = data_src['mark']\n",
             "try:\n",
             "\tDATA = pd.DataFrame.from_records(data['values'])\n",
             "except KeyError:\n",
             "\tDATA = str(data['url'])\n",
-            "alt.Chart(data=DATA, encoding=encoding, mark=str(mark))\n"
+            "try:\n",
+            "\tencoding = data_src['encoding']\n",
+            "\tmark = data_src['mark']\n",
+            "\talt.Chart(data=DATA, encoding=encoding, mark=str(mark))\n",
+            "except KeyError:\n",
+            "\talt.Chart(data=DATA)\n"
           ]
          }];
         model.fromJSON(md);
@@ -553,7 +629,7 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
   };
   //open a vl.json file in a notebook cell
   commands.addCommand(CommandIDs.JL_Voyager_Open_In_Notebook, {
-    label: 'Open in Notebook',
+    label: 'Open vl.json in Notebook',
     caption: 'Open a vl.json file in Notebook cell',
     execute: args => {
       let ll = app.shell.widgets('left');
@@ -565,7 +641,7 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
       let target_file = cur_fb.next();     
       if(target_file!==undefined&&target_file.type==='file'&&target_file.path.indexOf('vl.json')!==-1){       
         let cwd = browserFactory ? browserFactory.defaultBrowser.model.path : '';
-        return createNewNotebook(cwd, target_file.path);
+        return createNewNotebook(cwd, target_file.name);
       }
     },
     isEnabled: () =>{    
@@ -634,13 +710,16 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
   //add context menu for altair image ouput
   app.contextMenu.addItem({
     command: CommandIDs.JL_Graph_Voyager,
+    selector: '.p-Widget.jp-RenderedVegaCommon3.jp-RenderedVegaLite2.jp-OutputArea-output.vega-embed'
+  });
+  app.contextMenu.addItem({
+    command: CommandIDs.JL_Graph_Voyager,
     selector: '.p-Widget.jp-RenderedVegaCommon.jp-RenderedVegaLite.vega-embed.jp-OutputArea-output'
   });
   app.contextMenu.addItem({
     command: CommandIDs.JL_Graph_Voyager,
     selector: '.p-Widget.jp-RenderedImage.jp-OutputArea-output'
   });
-
 
   app.contextMenu.addItem({
     command: CommandIDs.JL_Table_Voyager,
