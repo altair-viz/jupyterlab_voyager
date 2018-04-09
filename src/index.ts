@@ -1,7 +1,7 @@
 ///<reference path="./lib.d.ts"/>
 
 import {
-  ActivityMonitor, PathExt
+  PathExt
 } from '@jupyterlab/coreutils';
 import {
   ILayoutRestorer,
@@ -90,9 +90,14 @@ namespace VoyagerPanel {
      * The document context for the Voyager being rendered by the widget.
      */
     context: DocumentRegistry.Context;
-    fileType: string;
+    fileType: FileType;
   }
 }
+
+// function assertNever(x: never): never {
+//   throw new Error("Unexpected object: " + x);
+// }
+
 export
 class VoyagerPanel extends Widget implements DocumentRegistry.IReadyWidget {
   static config: VoyagerConfig = {
@@ -101,11 +106,9 @@ class VoyagerPanel extends Widget implements DocumentRegistry.IReadyWidget {
     manualSpecificationOnly: true,
     hideHeader: true,
     hideFooter: true,
-
   }
   public voyager_cur: Voyager;
   public data_src:any;
-  public fileType: String;
   // it would make sense to resolve this promise after we have parsed the data
   // and created the Voyager component, but this will trigger an attempted
   // cleanup of the spinner element, which will already have been deleted
@@ -113,11 +116,11 @@ class VoyagerPanel extends Widget implements DocumentRegistry.IReadyWidget {
   // So instead we just never resolve this promise, which still gives us the
   // spinner until Voyager overwrites the element.
 
-  constructor(options: VoyagerPanel.IOptions) {
+  constructor({context, fileType}: VoyagerPanel.IOptions) {
     super();
     this.addClass(Voyager_CLASS);
-    const context = this._context = options.context;
-    this.fileType = options.fileType;
+    this.voyager_cur = CreateVoyager(this.node, VoyagerPanel.config, undefined as any);
+    this._context = context;
 
     this.title.label = PathExt.basename(context.path);
     context.pathChanged.connect(this._onPathChanged, this);
@@ -125,40 +128,41 @@ class VoyagerPanel extends Widget implements DocumentRegistry.IReadyWidget {
 
     this._context.ready.then(_ => {
       this._ready.resolve(undefined);
+
       const data = context.model.toString();
       var values;
-      if(this.fileType==='txt'){
+      if(fileType==='txt'){
         values = read(data, { type: 'json' });
       }
       else{
-        values = read(data, { type: this.fileType });
+        values = read(data, { type: fileType });
       }
-      if(this.fileType==='json'||this.fileType==='txt'){
+      console.log({values})
+      if(fileType==='json'||fileType==='txt'){
         if(values['data']){
           var DATA = values['data'];
           this.data_src = DATA;
           console.log(values['data']);
           if(DATA['url']){ //check if it's url type datasource
-            this.voyager_cur = CreateVoyager(this.node, VoyagerPanel.config, values['data']);
+            this.voyager_cur.updateData(values['data']);
           }
           else if(DATA['values']){ //check if it's array value data source
-           this.voyager_cur = CreateVoyager(this.node, VoyagerPanel.config, values['data']);
+            this.voyager_cur.updateData(values['data']);
           }
         }
         else{ //other conditions, just try to pass the value to voyager and wish the best
-          this.voyager_cur = CreateVoyager(this.node, VoyagerPanel.config, { values });
+          console.log("wishing for the best")
+          this.voyager_cur.updateData({ values });
           this.data_src = {values};
         }
-        console.log('mark": '+values['mark']);
-        console.log('encoding '+values['encoding']);
-        console.log('config '+values['config']);
 
         //update the specs if possible
-        this.voyager_cur.setSpec({'mark':values['mark'],'encoding':values['encoding']});
+        // this.voyager_cur!.setSpec({'mark':values['mark'],'encoding':values['encoding']});
 
       }
       else{
-        this.voyager_cur = CreateVoyager(this.node, VoyagerPanel.config, { values });
+        // assertNever(fileType);
+        this.voyager_cur.updateData({ values });
         this.data_src = {values};
       }
     })
@@ -184,16 +188,6 @@ class VoyagerPanel extends Widget implements DocumentRegistry.IReadyWidget {
     this.title.label = PathExt.basename(this._context.localPath);
   }
 
-  /**
-   * Dispose of the resources used by the widget.
-   */
-  dispose(): void {
-    if (this._monitor) {
-      this._monitor.dispose();
-    }
-    super.dispose();
-  }
-
     /**
    * Handle `'activate-request'` messages.
    */
@@ -203,15 +197,13 @@ class VoyagerPanel extends Widget implements DocumentRegistry.IReadyWidget {
   }
 
   protected _context: DocumentRegistry.Context;
-  private _ready = new PromiseDelegate<void>();
-  private _monitor: ActivityMonitor<any, any> | null = null;
-  
+  private _ready = new PromiseDelegate<void>();  
 }
 
 class VoyagerWidgetFactory extends ABCWidgetFactory<VoyagerPanel, DocumentRegistry.IModel> {
   // pass fileType into constructor so we know what it is and can pass it to vega-loader
   // to get the data
-  constructor(private fileType: string, options: DocumentRegistry.IWidgetFactoryOptions) {
+  constructor(private fileType: FileType, options: DocumentRegistry.IWidgetFactoryOptions) {
     super(options);
   }
   protected createNewWidget(context: DocumentRegistry.Context): VoyagerPanel {
@@ -220,10 +212,12 @@ class VoyagerWidgetFactory extends ABCWidgetFactory<VoyagerPanel, DocumentRegist
 
 }
 
+// so that we can type check we have covered all paths
+export type FileType = "csv" | "tsv" | "json" | "txt" | "vl.json"
+const fileTypes: Array<FileType> = ["csv", "tsv", "json", "txt", "vl.json"];
 
-const fileTypes = ['csv', 'json', 'tsv', 'txt','vl.json'];
+
 function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookTracker,palette: ICommandPalette, docManager: IDocumentManager, browserFactory: IFileBrowserFactory,mainMenu: IMainMenu)/*: InstanceTracker<VoyagerPanel>*/{
-
   //let wdg:VoyagerPanel_DF;
   const { commands} = app;
 
@@ -239,6 +233,7 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
 
 
   function createNew(cwd: string, data: any, open:boolean) {
+    console.warn('creating new', {cwd, data, open})
     return commands.execute('docmanager:new-untitled', {
       path: cwd, ext: '.vl.json', type: 'file'
     }).then(model => {
@@ -341,7 +336,7 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
         var datavoyager = (widget as VoyagerPanel).voyager_cur;
         var dataSrc = (widget as VoyagerPanel).data_src;
         //let aps = datavoyager.getApplicationState();
-        let spec = datavoyager.getSpec(false);
+        let spec = datavoyager!.getSpec(false);
         let context = docManager.contextForWidget(widget) as Context<DocumentRegistry.IModel>;
         context.model.fromJSON({"data":dataSrc, "mark": spec.mark, "encoding": spec.encoding});
         //context.model.fromJSON(spec);
@@ -369,7 +364,7 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
           var datavoyager = (widget as VoyagerPanel).voyager_cur;
           var dataSrc = (widget as VoyagerPanel).data_src;
           //let aps = datavoyager.getApplicationState();
-          let spec = datavoyager.getSpec(false);
+          let spec = datavoyager!.getSpec(false);
           let context = docManager.contextForWidget(widget) as Context<DocumentRegistry.IModel>;
           context.model.fromJSON({"data":dataSrc, "mark": spec.mark, "encoding": spec.encoding});
           //context.model.fromJSON(spec);
@@ -384,14 +379,9 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
           
       }
     },
-    isEnabled: () =>{      
+    isEnabled: () =>{
       let widget = app.shell.currentWidget;
-      if(widget&&widget.hasClass(Voyager_CLASS)){
-        return true;
-      }
-      else{
-        return false;
-      }
+      return widget instanceof VoyagerPanel;
     }
   });
 /*
@@ -466,6 +456,10 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
     name: 'txt',
     extensions: ['.txt']
   });
+  app.docRegistry.addFileType({
+    name: 'vl.json',
+    extensions: ['.vl.json']
+  });
 
   fileTypes.map(ft => {
     const factoryName = `Voyager (${ft})`;
@@ -482,26 +476,21 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
 
     // Handle state restoration.
     
-    restorer.restore(tracker1, {
+    restorer.restore(tracker1 as any, {
       command: 'docmanager:open',
       args: widget => ({ path: widget.context.path, factory: factoryName }),
       name: widget => widget.context.path
     });
 
     app.docRegistry.addWidgetFactory(factory);
+
     let ftObj = app.docRegistry.getFileType(ft);
-    
-    if(ftObj==undefined){
-      console.log("app docreg getfile type: undefined");
-    }
-    else{
-      console.log("app docreg getfile type: "+ftObj.name);
-    }
-    
     factory.widgetCreated.connect((sender, widget) => {
       // Track the widget.
       tracker1.add(widget);
-      widget.context.pathChanged.connect(()=>{tracker1.save(widget);});
+      widget.context.pathChanged.connect(()=>tracker1.save(widget));
+
+      // set the tab icon class and label to be that of the filetype
       if (ftObj) {
         if (ftObj.iconClass)
           widget.title.iconClass = ftObj.iconClass;
@@ -515,7 +504,6 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
 
 //const plugin: JupyterLabPlugin<InstanceTracker<VoyagerPanel>> = {
   const plugin: JupyterLabPlugin<void> = {
-  // NPM package name : JS object name
   id: 'jupyterlab_voyager:plugin',
   autoStart: true,
   requires: [ILayoutRestorer, INotebookTracker,ICommandPalette,IDocumentManager, IFileBrowserFactory, IMainMenu],

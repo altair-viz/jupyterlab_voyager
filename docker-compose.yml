@@ -1,24 +1,27 @@
-version: '3'
+version: '2.2'
 services:
   lab:
     build: .
-    command: start.sh jupyter lab --port=8889 --watch
+    command: jupyter lab --port=8889 --watch --ip='*' --no-browser --allow-root --NotebookApp.token='' --NotebookApp.password=''
+    init: true
     ports:
      - "8889:8889"
     volumes:
-      - ".:/home/jovyan"
+      - ".:/jupyterlab_voyager"
     depends_on:
       - build
   build:
     build: .
     command: yarn watch
+    init: true
     volumes:
-       - ".:/home/jovyan"
+       - ".:/jupyterlab_voyager"
   test:
     build:
       context: .
       dockerfile: test.Dockerfile
     command: cypress run
+    init: true
     working_dir: /jupyterlab_voyager
     volumes:
       - ".:/jupyterlab_voyager"

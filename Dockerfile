@@ -1,11 +1,19 @@
-FROM jupyter/minimal-notebook:c54800018c2c
-RUN conda install -y -c anaconda-platform yarnpkg=1.3.2 && conda clean -tipsy
+FROM frolvlad/alpine-miniconda3:python3.6
 
+RUN conda install -y -c conda-forge yarn
+RUN apk add --no-cache bash
+RUN conda install -y jupyter
+RUN conda install -y -c conda-forge pandas
+RUN conda install -y -c conda-forge jupyterlab=0.31.10
 
+WORKDIR /jupyterlab_voyager
+COPY yarn.lock package.json ./
+RUN yarn install --frozen-lockfile
+VOLUME /jupyterlab_voyager/node_modules
 
-COPY --chown=jovyan:users yarn.lock package.json ./
-RUN yarn install --frozen-lockfile --ignore-scripts && yarn cache clean
-VOLUME /home/jovyan/node_modules
+# allow npm prepare commands as root
+ENV npm_config_unsafe_perm=true
 
-COPY --chown=jovyan:users . .
-RUN jupyter labextension link --no-build .
+COPY . .
+RUN yarn build
+RUN jupyter labextension link
