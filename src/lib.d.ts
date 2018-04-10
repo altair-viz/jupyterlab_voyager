@@ -1,2 +1,2 @@
-declare module 'vega-loader';
-declare module 'react-dom';
+declare module "vega-loader";
+declare module "react-dom";
