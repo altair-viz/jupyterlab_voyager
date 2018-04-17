@@ -24,7 +24,7 @@ import {
 } from '@jupyterlab/filebrowser';
 
 import {
-  Widget, Menu
+  BoxLayout, Widget, Menu
 } from '@phosphor/widgets';
 
 import {
@@ -137,7 +137,11 @@ class VoyagerPanel extends Widget implements DocumentRegistry.IReadyWidget {
     super();
     this.addClass(Voyager_CLASS);
     const context = this._context = options.context;
+    const layout = (this.layout = new BoxLayout());
     this.fileType = options.fileType;
+
+    this._root = new Widget();
+    layout.addWidget(this._root);
 
     this.title.label = PathExt.basename(context.path);
     context.pathChanged.connect(this._onPathChanged, this);
@@ -160,18 +164,18 @@ class VoyagerPanel extends Widget implements DocumentRegistry.IReadyWidget {
           this.data_src = DATA;
           console.log(values['data']);
           if(DATA['url']){ //check if it's url type datasource
-            this.voyager_cur = CreateVoyager(this.node, VoyagerPanel.config, values['data']);
+            this.voyager_cur = CreateVoyager(this._root.node, VoyagerPanel.config, values['data']);
           }
           else if(DATA['values']){ //check if it's array value data source
-           this.voyager_cur = CreateVoyager(this.node, VoyagerPanel.config, values['data']);
+           this.voyager_cur = CreateVoyager(this._root.node, VoyagerPanel.config, values['data']);
           }
           else{//other conditions, just try to pass the value to voyager and wish the best
-            this.voyager_cur = CreateVoyager(this.node, VoyagerPanel.config, values['data']);
+            this.voyager_cur = CreateVoyager(this._root.node, VoyagerPanel.config, values['data']);
             this.data_src = values['data'];
           }
         }
         else{ //other conditions, just try to pass the value to voyager and wish the best
-          this.voyager_cur = CreateVoyager(this.node, VoyagerPanel.config, { values });
+          this.voyager_cur = CreateVoyager(this._root.node, VoyagerPanel.config, { values });
           this.data_src = {values};
         }
         console.log('mark": '+values['mark']);
@@ -193,7 +197,7 @@ class VoyagerPanel extends Widget implements DocumentRegistry.IReadyWidget {
 
       }
       else{
-        this.voyager_cur = CreateVoyager(this.node, VoyagerPanel.config, { values });
+        this.voyager_cur = CreateVoyager(this._root.node, VoyagerPanel.config, { values });
         this.data_src = {values};
       }
     })
@@ -240,6 +244,7 @@ class VoyagerPanel extends Widget implements DocumentRegistry.IReadyWidget {
   protected _context: DocumentRegistry.Context;
   private _ready = new PromiseDelegate<void>();
   private _monitor: ActivityMonitor<any, any> | null = null;
+  private _root: Widget;
   
 }
 
