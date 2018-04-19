@@ -43,7 +43,7 @@ import {
   IRenderMimeRegistry
 } from '@jupyterlab/rendermime';
 
-import { CreateVoyager, Voyager } from 'datavoyager/build/lib-voyager';
+import { CreateVoyager } from 'datavoyager/build/lib-voyager';
 import { VoyagerConfig } from 'datavoyager/build/models/config';
 import 'datavoyager/build/style.css';
 import { read } from 'vega-loader';
@@ -118,12 +118,12 @@ class VoyagerPanel extends Widget implements DocumentRegistry.IReadyWidget {
   static config: VoyagerConfig = {
     // don't allow user to select another data source from Voyager UI
     showDataSourceSelector: false,
-    //manualSpecificationOnly: true,
+    // manualSpecificationOnly: true,
     hideHeader: true,
     hideFooter: true,
 
   }
-  public voyager_cur: Voyager;
+  public voyager_cur: any;
   public data_src:any;
   public fileType: String;
   // it would make sense to resolve this promise after we have parsed the data
@@ -260,7 +260,6 @@ function openVLJSON_Altair(){
   
 
 }
-
 
 
 const fileTypes = ['csv', 'json', 'tsv', 'txt','vl.json'];
@@ -590,7 +589,6 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
       }
     }
   });
-
 
 
   // Track and restore the widget state
