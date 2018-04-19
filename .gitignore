@@ -14,3 +14,4 @@ node_modules/
 cypress/videos
 cypress/screenshots
 .Trash-0
+.vscode
