@@ -39,6 +39,10 @@ import {
   IDocumentManager
 } from '@jupyterlab/docmanager';
 
+import {
+  IRenderMimeRegistry
+} from '@jupyterlab/rendermime';
+
 import { CreateVoyager, Voyager } from 'datavoyager/build/lib-voyager';
 import { VoyagerConfig } from 'datavoyager/build/models/config';
 import 'datavoyager/build/style.css';
@@ -71,6 +75,8 @@ const Voyager_CLASS = 'jp-Voyager';
  * The name of the factory that creates editor widgets.
  */
 const FACTORY = 'Editor';
+
+const SOURCE = require('../tutorial/tutorial.md');
 
 //import { ReactChild } from 'react';
 export namespace CommandIDs {
@@ -112,7 +118,7 @@ class VoyagerPanel extends Widget implements DocumentRegistry.IReadyWidget {
   static config: VoyagerConfig = {
     // don't allow user to select another data source from Voyager UI
     showDataSourceSelector: false,
-    manualSpecificationOnly: true,
+    //manualSpecificationOnly: true,
     hideHeader: true,
     hideFooter: true,
 
@@ -140,6 +146,7 @@ class VoyagerPanel extends Widget implements DocumentRegistry.IReadyWidget {
     this._context.ready.then(_ => {
       this._ready.resolve(undefined);
       const data = context.model.toString();
+      const json_data = context.model.toJSON();
       var values;
       if(this.fileType==='txt'){
         values = read(data, { type: 'json' });
@@ -167,9 +174,9 @@ class VoyagerPanel extends Widget implements DocumentRegistry.IReadyWidget {
           this.voyager_cur = CreateVoyager(this.node, VoyagerPanel.config, { values });
           this.data_src = {values};
         }
-        //console.log('mark": '+values['mark']);
-        //console.log('encoding '+values['encoding']);
-        //console.log('config '+values['config']);
+        console.log('mark": '+values['mark']);
+        console.log('encoding '+values['encoding']);
+        console.log('config '+values['config']);
 
         //update the specs if possible
         this.voyager_cur.setSpec({
@@ -257,7 +264,7 @@ function openVLJSON_Altair(){
 
 
 const fileTypes = ['csv', 'json', 'tsv', 'txt','vl.json'];
-function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookTracker,palette: ICommandPalette, docManager: IDocumentManager, browserFactory: IFileBrowserFactory|null,mainMenu: IMainMenu)/*: InstanceTracker<VoyagerPanel>*/{
+function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookTracker,palette: ICommandPalette, docManager: IDocumentManager, browserFactory: IFileBrowserFactory|null,mainMenu: IMainMenu,rendermime: IRenderMimeRegistry)/*: InstanceTracker<VoyagerPanel>*/{
 
   //let wdg:VoyagerPanel_DF;
   // Declare a widget variable
@@ -331,39 +338,8 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
               createNew(path, JSONobject, true);
               break;
             }
-            /*
-            else if(!!outputs.get(i).data['vconcat']){
-              var JSONobject = outputs.get(i).data['application/vnd.jupyter.stdout'];
-              console.log('type is application/vnd.jupyter.stdout');
-              console.log(JSONobject)
-              let ll = app.shell.widgets('left');
-              let fb = ll.next();
-              while((fb as any).id!='filebrowser'){
-                fb = ll.next();
-              }
-              let path = (fb as any).model.path as string;
-              createNew(path, {data:JSONobject}, true);
-              break;
-            }*/
             i++;
           }
-/*
-          while(i<outputs.length){
-            if(!!outputs.get(i).data['application/vnd.vegalite.v1+json']){
-              var JSONobject = (outputs.get(i).data['application/vnd.vegalite.v1+json'] as any).data;
-              console.log(JSONobject)
-              let ll = app.shell.widgets('left');
-              let fb = ll.next();
-              while((fb as any).id!='filebrowser'){
-                fb = ll.next();
-              }
-              let path = (fb as any).model.path as string;
-              createNew(path, {data:JSONobject}, true);
-              break;
-            }
-            i++;
-          }*/
-          
         }
       }
     }
@@ -376,10 +352,6 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
     execute: args => {
       const cur = getCurrent(args);
       if(cur){
-        //const{context, notebook} = cur;
-        //console.log(context.session);
-        //context.model.fromString("   ");
-        //var filename = cur.id+'_Voyager';
         let cell = cur.notebook.activeCell;
         if(cell.model.type==='code'){
           let codeCell = (cur.notebook.activeCell as CodeCell);
@@ -472,15 +444,7 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
             "transform":spec.transform
           });
           //context.model.fromJSON(spec);
-          context.saveAs();
-          /*
-          getSavePath(context.path).then(PATH=>{
-            if(PATH){
-              createNew(PATH, {data:{"data":dataSrc, "mark": spec.mark, "encoding": spec.encoding}}, false);
-            }
-          });
-*/
-          
+          context.saveAs();     
       }
     },
     isEnabled: () =>{      
@@ -493,40 +457,6 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
       }
     }
   });
-/*
-  function getSavePath(path: string): Promise<string | undefined> {
-    let saveBtn = Dialog.okButton({ label: 'SAVE' });
-    return showDialog({
-      title: 'Save File As..',
-      body: new SaveWidget(path),
-      buttons: [Dialog.cancelButton(), saveBtn]
-    }).then(result => {
-      if (result.button.label === 'SAVE') {
-        return result.value as string;
-      }
-      return;
-    });
-  }
-*/
-  /*
-   * A widget that gets a file path from a user.
-   
-  class SaveWidget extends Widget {
-
-    constructor(path: string) {
-      super({ node: createSaveNode(path) });
-    }
-
-    getValue(): string {
-      return (this.node as HTMLInputElement).value;
-    }
-  }
-
-  function createSaveNode(path: string): HTMLElement {
-    let input = document.createElement('input');
-    input.value = path;
-    return input;
-  }*/
 
   commands.addCommand(CommandIDs.JL_Voyager_Open, {
     label: 'Open file in Voyager',
@@ -664,13 +594,13 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
 
 
   // Track and restore the widget state
-  let tracker0 = new InstanceTracker<VoyagerTutorialWidget>({ namespace: 'xkcd' });
+  let tracker0 = new InstanceTracker<VoyagerTutorialWidget>({ namespace: 'voyager_tutorial' });
     // Add an application command
   const command: string = CommandIDs.JL_Voyager_Tutorial;
   restorer.restore(tracker0, {
     command,
     args: () => JSONExt.emptyObject,
-    name: () => 'xkcd'
+    name: () => 'voyager_tutorial'
   });
   commands.addCommand(CommandIDs.JL_Voyager_Tutorial, {
     label: 'Open Tutorial',
@@ -678,7 +608,12 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
     execute: args => {
       if (!T_widget) {
         // Create a new widget if one does not exist
-        T_widget = new VoyagerTutorialWidget();
+        
+        let content = rendermime.createRenderer('text/markdown');
+        const model = rendermime.createModel({data:{'text/markdown': SOURCE}});
+        content.renderModel(model);
+        content.addClass('jp-VoyagerTutorial-content');
+        T_widget = new VoyagerTutorialWidget(content);
         T_widget.update();
       }
       if (!tracker0.has(T_widget)) {
@@ -792,7 +727,7 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
   // NPM package name : JS object name
   id: 'jupyterlab_voyager:plugin',
   autoStart: true,
-  requires: [ILayoutRestorer, INotebookTracker,ICommandPalette,IDocumentManager, IFileBrowserFactory, IMainMenu],
+  requires: [ILayoutRestorer, INotebookTracker,ICommandPalette,IDocumentManager, IFileBrowserFactory, IMainMenu, IRenderMimeRegistry],
   activate: activate
 };
 export default plugin;

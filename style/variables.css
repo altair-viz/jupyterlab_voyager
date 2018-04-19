@@ -4,6 +4,5 @@
 |----------------------------------------------------------------------------*/
 
 :root {
-    --jp-Voyager-icon: url('./Images/VoyagerIcon.png');
-    --jp-Voyager-tutorial: url('./Images/tutorial.jpg')
+    --jp-Voyager-icon: url('./Images/VoyagerIcon.png')
 }

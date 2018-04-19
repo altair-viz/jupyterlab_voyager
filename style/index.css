@@ -14,19 +14,32 @@
   background-position: center;
   background-image: var(--jp-Voyager-icon);
 }
-.jp-VoyagerTutorialWidget {
-  display: flex;
-  flex-direction: column;
-  overflow: auto;
-  background-repeat: no-repeat;
-  background-image: var(--jp-Voyager-tutorial);
-}
-
-.jp-VoyagerTutorialCartoon {
-  margin: auto;
-}
 
 .jp-VoyagerTutorialAttribution {
   margin: 20px auto;
+}
+
+.jp-VoyagerTutorialWidget {
+  font-family: var(--jp-content-font-family);
+  line-height: var(--jp-content-line-height);
+  font-size: var(--jp-content-font-size1);
+  color: var(--jp-content-font-color1);
+  outline: none;
+  display: flex;
+  flex-direction: column;
+  min-width: 240px;
+  min-height: 120px;
+}
+
+.jp-VoyagerTutorial-toolbar {
+  min-height: var(--jp-toolbar-micro-height);
+  border-bottom: var(--jp-border-width) solid var(--jp-toolbar-border-color);
+  box-shadow: var(--jp-toolbar-box-shadow);
+  background-color: var(--jp-layout-color1);
+}
+
+.jp-VoyagerTutorial-content {
+  overflow-y: auto;
+  padding: 32px;
 }
 
