@@ -26,7 +26,7 @@ CMD start.sh jupyter lab
 ```
 
 
-Then right click on any `csv` or `json` file click "Open with...", then "Voyager".
+Then right click on any `csv`, `tsv`, `json` or `vl.json` file click "Open with...", then "Voyager".
 
 ## Development
 

@@ -10,7 +10,7 @@ import {
 } from '@jupyterlab/application';
 
 import {
-  ICommandPalette,InstanceTracker//, Dialog, showDialog
+  ICommandPalette,InstanceTracker,Toolbar,ToolbarButton, Dialog, showDialog
 } from '@jupyterlab/apputils';
 
 import {
@@ -24,7 +24,7 @@ import {
 } from '@jupyterlab/filebrowser';
 
 import {
-  Widget, Menu
+  Widget, Menu,BoxLayout
 } from '@phosphor/widgets';
 
 import {
@@ -52,7 +52,7 @@ import {
   INotebookTracker, NotebookPanel, NotebookTracker, NotebookModel,NotebookActions
 } from '@jupyterlab/notebook';
 import {
-  CodeCell, ICellModel
+  CodeCell
 } from '@jupyterlab/cells';
 
 import {
@@ -62,9 +62,28 @@ import {
 import {VoyagerTutorialWidget} from './tutorial'
 
 import '../style/index.css';
-import { Contents } from '@jupyterlab/services';
 
 const VOYAGER_ICON = 'jp-VoyagerIcon';
+const VOYAGER_PANEL_TOOLBAR_CLASS = 'jp-VoyagerPanel-toolbar';
+/**
+ * The class name added to toolbar save button.
+ */
+const TOOLBAR_SAVE_CLASS = 'jp-SaveIcon';
+
+/**
+ * The class name added to toolbar insert button.
+ */
+const TOOLBAR_SAVE_AS_CLASS = 'jp-SaveAsIcon';
+
+/**
+ * The class name added to toolbar cut button.
+ */
+const TOOLBAR_UNDO_CLASS = 'jp-UndoIcon';
+
+/**
+ * The class name added to toolbar copy button.
+ */
+const TOOLBAR_REDO_CLASS = 'jp-RedoIcon';
 
 /**
  * The class name added to a datavoyager widget.
@@ -94,8 +113,106 @@ export namespace CommandIDs {
   const JL_Voyager_Open_In_Notebook = 'voyager_VL_JSON_file:open_in_notebook';
   export
   const JL_Voyager_Tutorial = 'voyager_tutorial:open';
-
+  export
+  const JL_Voyager_Undo = 'voyager_graph:undo';
+  export
+  const JL_Voyager_Redo = 'voyager_graph:redo';
+  export
+  const JL_Voyager_HideBar = 'voyager_graph:hidebar';
 }
+
+export
+function createSaveButton(widget: VoyagerPanel): ToolbarButton {
+  return new ToolbarButton({
+    className: TOOLBAR_SAVE_CLASS,
+    onClick: () => {
+      if(widget&&widget.hasClass(Voyager_CLASS)&&(widget as VoyagerPanel).context.path.indexOf('vl.json')!==-1){
+        var datavoyager = (widget as VoyagerPanel).voyager_cur;
+        var dataSrc = (widget as VoyagerPanel).data_src;
+        let spec = datavoyager.getSpec(false);
+        let context = widget.context as Context<DocumentRegistry.IModel>;
+        context.model.fromJSON({
+          "data":dataSrc, 
+          "mark": spec.mark, 
+          "encoding": spec.encoding, 
+          "height":spec.height, 
+          "width":spec.width, 
+          "description":spec.description,
+          "name":spec.name,
+          "selection":spec.selection,
+          "title":spec.title,
+          "transform":spec.transform
+        });
+        context.save();
+      }
+      else{
+        showDialog({
+          title: "Warning",
+          body: "File must end in vl.json to save, use 'Save As' instead",
+          buttons: [Dialog.warnButton({ label: "OK"})]
+        })
+      }
+    },
+    tooltip: 'Save the current voyager contents',    
+  });
+}
+
+export
+function createSaveAsButton(widget: VoyagerPanel): ToolbarButton {
+  return new ToolbarButton({
+    className: TOOLBAR_SAVE_AS_CLASS,
+    onClick: () => {
+      var datavoyager = (widget as VoyagerPanel).voyager_cur;
+      var dataSrc = (widget as VoyagerPanel).data_src;
+      //let aps = datavoyager.getApplicationState();
+      let spec = datavoyager.getSpec(false);
+      //let context = docManager.contextForWidget(widget) as Context<DocumentRegistry.IModel>;
+      let context = widget.context as Context<DocumentRegistry.IModel>;
+      context.model.fromJSON({
+        "data":dataSrc, 
+        "mark": spec.mark, 
+        "encoding": spec.encoding, 
+        "height":spec.height, 
+        "width":spec.width, 
+        "description":spec.description,
+        "name":spec.name,
+        "selection":spec.selection,
+        "title":spec.title,
+        "transform":spec.transform
+      });
+      //context.model.fromJSON(spec);
+      context.saveAs();
+    },
+    tooltip: 'Save the current voyager contents to a vl.json file'
+  });
+}
+
+export
+function createUndoButton(widget: VoyagerPanel): ToolbarButton {
+  return new ToolbarButton({
+    className: TOOLBAR_UNDO_CLASS,
+    onClick: () => {
+      (widget as VoyagerPanel).voyager_cur.undo();
+    },
+    tooltip: 'Update state to reflect the previous state'
+  });
+}
+
+export
+function createRedoButton(widget: VoyagerPanel): ToolbarButton {
+  return new ToolbarButton({
+    className: TOOLBAR_REDO_CLASS,
+    onClick: () => {
+      (widget as VoyagerPanel).voyager_cur.redo();
+    },
+    tooltip: 'Update state to reflect the future state'
+  });
+}
+
+
+
+
+
 /**
  * A namespace for `VoyagerPanel` statics.
  */
@@ -124,8 +241,10 @@ class VoyagerPanel extends Widget implements DocumentRegistry.IReadyWidget {
 
   }
   public voyager_cur: Voyager;
+  public voyager_widget: Widget;
   public data_src:any;
   public fileType: String;
+  public toolbar:Toolbar<Widget>;
   // it would make sense to resolve this promise after we have parsed the data
   // and created the Voyager component, but this will trigger an attempted
   // cleanup of the spinner element, which will already have been deleted
@@ -143,10 +262,13 @@ class VoyagerPanel extends Widget implements DocumentRegistry.IReadyWidget {
     context.pathChanged.connect(this._onPathChanged, this);
     this._onPathChanged();
 
+    let layout = this.layout = new BoxLayout();
+
+    this.voyager_widget = new Widget();
+
     this._context.ready.then(_ => {
       this._ready.resolve(undefined);
       const data = context.model.toString();
-      const json_data = context.model.toJSON();
       var values;
       if(this.fileType==='txt'){
         values = read(data, { type: 'json' });
@@ -160,18 +282,18 @@ class VoyagerPanel extends Widget implements DocumentRegistry.IReadyWidget {
           this.data_src = DATA;
           console.log(values['data']);
           if(DATA['url']){ //check if it's url type datasource
-            this.voyager_cur = CreateVoyager(this.node, VoyagerPanel.config, values['data']);
+            this.voyager_cur = CreateVoyager(this.voyager_widget.node, VoyagerPanel.config, values['data']);
           }
           else if(DATA['values']){ //check if it's array value data source
-           this.voyager_cur = CreateVoyager(this.node, VoyagerPanel.config, values['data']);
+           this.voyager_cur = CreateVoyager(this.voyager_widget.node, VoyagerPanel.config, values['data']);
           }
           else{//other conditions, just try to pass the value to voyager and wish the best
-            this.voyager_cur = CreateVoyager(this.node, VoyagerPanel.config, values['data']);
+            this.voyager_cur = CreateVoyager(this.voyager_widget.node, VoyagerPanel.config, values['data']);
             this.data_src = values['data'];
           }
         }
         else{ //other conditions, just try to pass the value to voyager and wish the best
-          this.voyager_cur = CreateVoyager(this.node, VoyagerPanel.config, { values });
+          this.voyager_cur = CreateVoyager(this.voyager_widget.node, VoyagerPanel.config, { values });
           this.data_src = {values};
         }
         console.log('mark": '+values['mark']);
@@ -193,12 +315,26 @@ class VoyagerPanel extends Widget implements DocumentRegistry.IReadyWidget {
 
       }
       else{
-        this.voyager_cur = CreateVoyager(this.node, VoyagerPanel.config, { values });
+        this.voyager_cur = CreateVoyager(this.voyager_widget.node, VoyagerPanel.config, { values });
         this.data_src = {values};
       }
     })
 
+    // Toolbar
+    this.toolbar = new Toolbar();
+    this.toolbar.addClass(VOYAGER_PANEL_TOOLBAR_CLASS);
+    this.toolbar.addItem('save', createSaveButton(this));
+    this.toolbar.addItem('saveAs', createSaveAsButton(this));
+    this.toolbar.addItem('undo', createUndoButton(this));
+    this.toolbar.addItem('redo', createRedoButton(this));
 
+    layout.addWidget(this.toolbar);
+    layout.addWidget(this.voyager_widget);
+
+    BoxLayout.setStretch(this.toolbar, 0);
+    BoxLayout.setStretch(this.voyager_widget, 1);
+
+    this.toolbar.hide();
   }
 
   /**
@@ -233,8 +369,8 @@ class VoyagerPanel extends Widget implements DocumentRegistry.IReadyWidget {
    * Handle `'activate-request'` messages.
    */
   protected onActivateRequest(msg: Message): void {
-    this.node.tabIndex = -1;
-    this.node.focus();
+    this.voyager_widget.node.tabIndex = -1;
+    this.voyager_widget.node.focus();
   }
 
   protected _context: DocumentRegistry.Context;
@@ -254,13 +390,6 @@ class VoyagerWidgetFactory extends ABCWidgetFactory<VoyagerPanel, DocumentRegist
   }
 
 }
-
-
-function openVLJSON_Altair(){
-  
-
-}
-
 
 
 const fileTypes = ['csv', 'json', 'tsv', 'txt','vl.json'];
@@ -382,7 +511,7 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
   });
 
   commands.addCommand(CommandIDs.JL_Voyager_Save, {
-    label: 'Save Current Voyager',
+    label: 'Save Voyager',
     caption: 'Save the chart datasource as vl.json file',
     execute: args => {
       let widget = app.shell.currentWidget;
@@ -420,7 +549,7 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
   });
 
   commands.addCommand(CommandIDs.JL_Voyager_Save1, {
-    label: 'Save AS vl.json',
+    label: 'Save Voyager AS vl.json',
     caption: 'Save the chart datasource as vl.json file',
     execute: args => {
       let widget = app.shell.currentWidget;
@@ -469,7 +598,7 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
       }
       let cur_fb = (fb as FileBrowser).selectedItems();
       let target_file = cur_fb.next();     
-      while(target_file!==undefined&&target_file.type==='file'){
+      if(target_file!==undefined&&target_file.type==='file'){
         let target_file_ext = PathExt.extname(target_file.path);
         console.log(target_file_ext)
         switch(target_file_ext){
@@ -483,7 +612,7 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
             commands.execute('docmanager:open', {path: target_file.path, factory: `Voyager (tsv)`});
             break;
         }
-        target_file=cur_fb.next();
+        //target_file=cur_fb.next();
       }
       
     },
@@ -541,25 +670,21 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
             "\tDATA = pd.DataFrame.from_records(data['values'])\n",
             "except KeyError:\n",
             "\tDATA = str(data['url'])\n",
-            "try:\n",
-            "\tencoding = data_src['encoding']\n",
-            "\tmark = data_src['mark']\n",
-            "\talt.Chart(data=DATA, encoding=encoding, mark=str(mark))\n",
-            "except KeyError:\n",
-            "\talt.Chart(data=DATA)\n"
+            "encoding = data_src['encoding']\n",
+            "mark = data_src['mark']\n",
+            "alt.Chart(data=DATA, encoding=encoding, mark=str(mark))\n",
           ]
          }];
         model.fromJSON(md);
         (widget as NotebookPanel).notebook.model = model;
-        NotebookActions.run(widget.notebook, widget.context.session);
         widget.context.save();
-
+        NotebookActions.runAll(widget.notebook, widget.context.session);
       });
     });
   };
   //open a vl.json file in a notebook cell
   commands.addCommand(CommandIDs.JL_Voyager_Open_In_Notebook, {
-    label: 'Open vl.json in Notebook',
+    label: 'Open vl.json file in Notebook',
     caption: 'Open a vl.json file in Notebook cell',
     execute: args => {
       let ll = app.shell.widgets('left');
@@ -590,6 +715,32 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
       }
     }
   });
+
+    //open a vl.json file in a notebook cell
+    commands.addCommand(CommandIDs.JL_Voyager_HideBar, {
+      label: 'Show/Hide toolbar',
+      caption: 'show or hide toolbar in voyager',
+      execute: args => {
+        let widget = app.shell.currentWidget;
+        if(widget){
+          if((widget as VoyagerPanel).toolbar.isHidden){
+            (widget as VoyagerPanel).toolbar.show();
+          }
+          else{
+            (widget as VoyagerPanel).toolbar.hide();
+          }
+        }
+      },
+      isEnabled: () =>{      
+        let widget = app.shell.currentWidget;
+        if(widget&&widget.hasClass(Voyager_CLASS)){
+          return true;
+        }
+        else{
+          return false;
+        }
+      }
+    });
 
 
 
@@ -632,15 +783,65 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
     },
   });
 
+  commands.addCommand(CommandIDs.JL_Voyager_Undo, {
+    label: 'Undo',
+    caption: 'Update state to reflect the previous state',
+    execute: args => {
+      let widget = app.shell.currentWidget;
+      if(widget){
+        (widget as VoyagerPanel).voyager_cur.undo();
+      }
+    },
+  });
+
+  commands.addCommand(CommandIDs.JL_Voyager_Redo, {
+    label: 'Redo',
+    caption: 'Update state to reflect the future state',
+    execute: args => {
+      let widget = app.shell.currentWidget;
+      if(widget){
+        (widget as VoyagerPanel).voyager_cur.redo();
+      }
+    },
+  });
+
   let menu = new Menu({commands});
   menu.title.label = "Voyager";
   [
-    CommandIDs.JL_Voyager_Open, CommandIDs.JL_Voyager_Save,CommandIDs.JL_Voyager_Save1,CommandIDs.JL_Voyager_Tutorial, CommandIDs.JL_Voyager_Open_In_Notebook,
+    CommandIDs.JL_Voyager_Open,CommandIDs.JL_Voyager_Open_In_Notebook, CommandIDs.JL_Voyager_Tutorial, CommandIDs.JL_Voyager_HideBar,
   ].forEach(command =>{
     menu.addItem({command});
   });
   mainMenu.addMenu(menu,{rank:60});
 
+  mainMenu.fileMenu.addGroup([{command:CommandIDs.JL_Voyager_Save},{command:CommandIDs.JL_Voyager_Save1}], 2)
+
+  //add phosphor context menu for voyager, for the "save", "save as", "undo", "redo" functions
+  app.contextMenu.addItem({
+    command: CommandIDs.JL_Voyager_Undo,
+    selector: '.p-Widget.jp-Voyager.jp-Document.jp-Activity.p-DockPanel-widget',
+    rank:0
+  });
+  app.contextMenu.addItem({
+    command: CommandIDs.JL_Voyager_Redo,
+    selector: '.p-Widget.jp-Voyager.jp-Document.jp-Activity.p-DockPanel-widget',
+    rank: 1
+  });
+  app.contextMenu.addItem({
+    type: 'separator',
+    selector: '.p-Widget.jp-Voyager.jp-Document.jp-Activity.p-DockPanel-widget',
+    rank: 2
+  });
+  app.contextMenu.addItem({
+    command: CommandIDs.JL_Voyager_Save,
+    selector: '.p-Widget.jp-Voyager.jp-Document.jp-Activity.p-DockPanel-widget',
+    rank:3
+  });
+  app.contextMenu.addItem({
+    command: CommandIDs.JL_Voyager_Save1,
+    selector: '.p-Widget.jp-Voyager.jp-Document.jp-Activity.p-DockPanel-widget',
+    rank:4
+  });
 
   //add context menu for altair image ouput
   app.contextMenu.addItem({
