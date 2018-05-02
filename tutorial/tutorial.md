@@ -49,7 +49,7 @@ Note: In order to save to current file, this original file has to be vl.json typ
 ![image](http://raw.githubusercontent.com/zzhangjii/sourcefiles/master/tutorial_pic_3.png)
 
 * Operation 2: Export Voyager as vl.json
-Click ‘Voyager’ in top menu => select ‘Save as vl.json’ Or Use "SaveAs" button in toolbar Note: Currently, user has to manually change the file extension to vl.json
+Click ‘File’ in top menu => select ‘Save As’ Or Use "SaveAs" button in toolbar Note: Currently, user has to manually change the file extension to vl.json
 
 ![image](http://raw.githubusercontent.com/zzhangjii/sourcefiles/master/tutorial_pic_4.png)
 
