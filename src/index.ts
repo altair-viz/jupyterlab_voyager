@@ -90,11 +90,6 @@ const TOOLBAR_REDO_CLASS = 'jp-RedoIcon';
  */
 const Voyager_CLASS = 'jp-Voyager';
 
-/**
- * The name of the factory that creates editor widgets.
- */
-const FACTORY = 'Editor';
-
 const SOURCE = require('../tutorial/tutorial.md');
 
 //import { ReactChild } from 'react';
@@ -341,6 +336,26 @@ class VoyagerPanel extends Widget implements DocumentRegistry.IReadyWidget {
    * Get the context for the editor widget.
    */
   get context(): DocumentRegistry.Context {
+    if(this._context.path.indexOf('vl.json')!==-1){
+    var datavoyager = this.voyager_cur;
+    var dataSrc = this.data_src;
+    //let aps = datavoyager.getApplicationState();
+    let spec = datavoyager.getSpec(false);
+    this._context.model.fromJSON({
+      "data":dataSrc, 
+      "mark": spec.mark, 
+      "encoding": spec.encoding, 
+      "height":spec.height, 
+      "width":spec.width, 
+      "description":spec.description,
+      "name":spec.name,
+      "selection":spec.selection,
+      "title":spec.title,
+      "transform":spec.transform
+    });
+    }
+    //context.model.fromJSON(spec);
+    //this._context.save();
     return this._context;
   }
 
@@ -416,18 +431,24 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
       path: cwd, ext: '.vl.json', type: 'file'
     }).then(model => {
       return commands.execute('docmanager:open', {
-        path: model.path, factory: FACTORY
+        path: model.path, factory: "Editor"
       }).then(widget=>{
-        let context = docManager.contextForWidget(widget) as Context<DocumentRegistry.IModel>;
-        context.model.fromJSON(data);
-        context.save().then(()=>{
-          if(open){
-            commands.execute('docmanager:open', {
-            path: model.path, factory: `Voyager (json)`
-            }) 
-          }  
-        })
-      });
+        let context = docManager.contextForWidget(widget);
+        if(context!=undefined){
+          context.save().then(()=>{
+            if(context!=undefined){
+              context.model.fromJSON(data);
+              context.save().then(()=>{
+                if (open) {
+                  commands.execute('docmanager:open', {
+                    path: model.path,
+                    factory: `Voyager (json)`
+                  });
+                }
+              })     
+            }
+          })
+        }})
     });
   };
 
@@ -479,9 +500,12 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
     label: 'Open in Voyager',
     caption: 'Open the datasource in Voyager',
     execute: args => {
+      console.log('open table in voyager')
       const cur = getCurrent(args);
+      console.log(cur)
       if(cur){
         let cell = cur.notebook.activeCell;
+        console.log(cell.model.type)
         if(cell.model.type==='code'){
           let codeCell = (cur.notebook.activeCell as CodeCell);
           let outputs = codeCell.model.outputs;
@@ -499,7 +523,7 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
                 fb = ll.next();
               }
               let path = (fb as any).model.path as string;
-              createNew(path, {data:{'values':JSONobject}}, true);
+              createNew(path, {'data':{'values':JSONobject}}, true);
               break;
             }
             i++;
@@ -549,8 +573,8 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
   });
 
   commands.addCommand(CommandIDs.JL_Voyager_Save1, {
-    label: 'Save Voyager AS vl.json',
-    caption: 'Save the chart datasource as vl.json file',
+    label: 'Export Voyager AS vl.json',
+    caption: 'Export the chart datasource as vl.json file',
     execute: args => {
       let widget = app.shell.currentWidget;
       
@@ -559,8 +583,13 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
           var dataSrc = (widget as VoyagerPanel).data_src;
           //let aps = datavoyager.getApplicationState();
           let spec = datavoyager.getSpec(false);
-          let context = docManager.contextForWidget(widget) as Context<DocumentRegistry.IModel>;
-          context.model.fromJSON({
+          let ll = app.shell.widgets('left');
+          let fb = ll.next();
+          while((fb as any).id!='filebrowser'){
+            fb = ll.next();
+          }
+          let path = (fb as any).model.path as string;
+          createNew(path, {
             "data":dataSrc, 
             "mark": spec.mark, 
             "encoding": spec.encoding, 
@@ -571,9 +600,7 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
             "selection":spec.selection,
             "title":spec.title,
             "transform":spec.transform
-          });
-          //context.model.fromJSON(spec);
-          context.saveAs();     
+            }, false);   
       }
     },
     isEnabled: () =>{      
@@ -814,7 +841,7 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
   });
   mainMenu.addMenu(menu,{rank:60});
 
-  mainMenu.fileMenu.addGroup([{command:CommandIDs.JL_Voyager_Save},{command:CommandIDs.JL_Voyager_Save1}], 2)
+  mainMenu.fileMenu.addGroup([{command:CommandIDs.JL_Voyager_Save},{command:CommandIDs.JL_Voyager_Save1}], 3)
 
   //add phosphor context menu for voyager, for the "save", "save as", "undo", "redo" functions
   app.contextMenu.addItem({

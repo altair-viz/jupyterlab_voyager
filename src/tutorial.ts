@@ -3,7 +3,7 @@ import {
 } from '@phosphor/messaging';
 
 import {
-  Widget
+  Widget, PanelLayout
 } from '@phosphor/widgets';
 
 import '../style/index.css';
@@ -25,11 +25,12 @@ class VoyagerTutorialWidget extends Widget {
     this.addClass('jp-VoyagerTutorialWidget');
     let toolbar = new Widget();
     toolbar.addClass('jp-VoyagerTutorial-toolbar');
-    /*
+    
     let layout = this.layout = new PanelLayout();
     layout.addWidget(toolbar);
     layout.addWidget(content);
-    */
+    
+   /*
     this.img = document.createElement('img');
 
     let img0 = document.createElement('img');
@@ -191,7 +192,7 @@ class VoyagerTutorialWidget extends Widget {
              </p>
                 </div>
              </body> 
-                  `);
+                  `);*/
     
   }
 
