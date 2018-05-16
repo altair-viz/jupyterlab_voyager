@@ -76,6 +76,8 @@ export namespace CommandIDs {
   export
   const JL_Voyager_Save = 'voyager_graph:save';
   export
+  const JL_Voyager_Save1 = 'voyager_graph:save1';
+  export
   const JL_Voyager_Export = 'voyager_graph:Export';
   export
   const JL_Voyager_Open = 'voyager_file:open';
@@ -204,8 +206,8 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
         ));
         }
         else{
-          let basePath = PathExt.dirname(cwd);
-          let newPath = PathExt.join(basePath, msg);
+          let basePath = cwd;
+          let newPath = PathExt.join(basePath, msg+'.vl.json');
           return commands.execute('docmanager:new-untitled', {
             path: cwd, ext: '.vl.json', type: 'file'
           }).then(model => {
@@ -229,11 +231,9 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
                   }
                 })
               }})
-            }
-            )
-            
-            });
-          }}
+            })
+          });
+        }}
     })
   };
 
@@ -345,7 +345,7 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
   });
 
   commands.addCommand(CommandIDs.JL_Voyager_Save, {
-    label: 'Save Voyager',
+    label: '     ',
     caption: 'Save the chart datasource as vl.json file',
     execute: args => {
       let widget = app.shell.currentWidget;
@@ -373,7 +373,37 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
     },
     isEnabled: () =>{
       return false;
-      /*      
+    }
+  });
+
+  commands.addCommand(CommandIDs.JL_Voyager_Save1, {
+    label: 'Save Voyager State',
+    caption: 'Save the chart datasource as vl.json file',
+    execute: args => {
+      let widget = app.shell.currentWidget;
+      if(widget){
+        var datavoyager = (widget as VoyagerPanel).voyager_cur;
+        var dataSrc = (widget as VoyagerPanel).data_src;
+        //let aps = datavoyager.getApplicationState();
+        let spec = datavoyager.getSpec(false);
+        let context = docManager.contextForWidget(widget) as Context<DocumentRegistry.IModel>;
+        context.model.fromJSON({
+          "data":dataSrc, 
+          "mark": spec.mark, 
+          "encoding": spec.encoding, 
+          "height":spec.height, 
+          "width":spec.width, 
+          "description":spec.description,
+          "name":spec.name,
+          "selection":spec.selection,
+          "title":spec.title,
+          "transform":spec.transform
+        });
+        //context.model.fromJSON(spec);
+        context.save();
+      }
+    },
+    isEnabled: () =>{     
       let widget = app.shell.currentWidget;
       if(widget&&widget.hasClass(Voyager_CLASS)&&(widget as VoyagerPanel).context.path.indexOf('vl.json')!==-1){
         return true;
@@ -381,7 +411,6 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
       else{
         return false;
       }
-      */
     }
   });
 
@@ -398,24 +427,32 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
           var dataSrc = (widget as VoyagerPanel|VoyagerPanel_DF).data_src;
           //let aps = datavoyager.getApplicationState();
           let spec = datavoyager.getSpec(false);
+          console.log(spec)
           let ll = app.shell.widgets('left');
           let fb = ll.next();
           while((fb as any).id!='filebrowser'){
             fb = ll.next();
           }
           let path = (fb as any).model.path as string;
-          createNew(path, {
-            "data":dataSrc, 
-            "mark": spec.mark, 
-            "encoding": spec.encoding, 
-            "height":spec.height, 
-            "width":spec.width, 
-            "description":spec.description,
-            "name":spec.name,
-            "selection":spec.selection,
-            "title":spec.title,
-            "transform":spec.transform
-            }, false);   
+          if(spec!==undefined){
+            createNew(path, {
+              "data":dataSrc, 
+              "mark": spec.mark, 
+              "encoding": spec.encoding, 
+              "height":spec.height, 
+              "width":spec.width, 
+              "description":spec.description,
+              "name":spec.name,
+              "selection":spec.selection,
+              "title":spec.title,
+              "transform":spec.transform
+              }, false);   
+          }
+          else{
+            createNew(path, {
+              "data":dataSrc, 
+              }, false);  
+          }
       }
     },
     isEnabled: () =>{      
@@ -707,7 +744,7 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
       rank:3
     });
     app.contextMenu.addItem({
-      command: CommandIDs.JL_Voyager_Save,
+      command: CommandIDs.JL_Voyager_Save1,
       selector: '.voyager',
       rank:4
     });

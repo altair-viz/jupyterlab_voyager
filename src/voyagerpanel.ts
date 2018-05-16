@@ -324,7 +324,7 @@ class VoyagerPanel extends Widget implements DocumentRegistry.IReadyWidget {
     this.toolbar = new Toolbar();
     this.toolbar.addClass(VOYAGER_PANEL_TOOLBAR_CLASS);
     this.toolbar.addItem('save', createSaveButton(this));
-    this.toolbar.addItem('saveAs', createExportButton(this));
+    //this.toolbar.addItem('saveAs', createExportButton(this));
     this.toolbar.addItem('undo', createUndoButton(this));
     this.toolbar.addItem('redo', createRedoButton(this));
    // this.toolbar.addItem('Bookmarks', createBookMarkButton(this));
@@ -455,7 +455,7 @@ class VoyagerPanel_DF extends Widget implements DocumentRegistry.IReadyWidget {
     this.toolbar = new Toolbar();
     this.toolbar.addClass(VOYAGER_PANEL_TOOLBAR_CLASS);
     this.toolbar.addItem('save', createSaveButton(this));
-    this.toolbar.addItem('saveAs', createExportButton(this));
+    //this.toolbar.addItem('saveAs', createExportButton(this));
     this.toolbar.addItem('undo', createUndoButton(this));
     this.toolbar.addItem('redo', createRedoButton(this));
    // this.toolbar.addItem('Bookmarks', createBookMarkButton(this));
