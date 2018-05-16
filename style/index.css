@@ -81,7 +81,7 @@
   background-image: var(--jp-Save-icon);
 }
 
-.jp-SaveAsIcon{
+.jp-ExportIcon{
   min-width: 16px;
   min-height: 16px;
   background-size: 16px;
@@ -89,7 +89,7 @@
   vertical-align: middle;
   background-repeat: no-repeat;
   background-position: center;
-  background-image: var(--jp-SaveAs-icon);
+  background-image: var(--jp-Export-icon);
 }
 
 .jp-UndoIcon{

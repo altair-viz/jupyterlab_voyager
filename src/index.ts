@@ -1,12 +1,7 @@
 ///<reference path="./lib.d.ts"/>
 
-import path = require('path');
-import fs = require('fs-extra');
-
-
-
 import {
-  ActivityMonitor, PathExt,nbformat
+  PathExt,nbformat
 } from '@jupyterlab/coreutils';
 import {
   ILayoutRestorer,
@@ -15,7 +10,7 @@ import {
 } from '@jupyterlab/application';
 
 import {
-  ICommandPalette,InstanceTracker,Toolbar,ToolbarButton, Dialog, showDialog, showErrorMessage
+  ICommandPalette,InstanceTracker,Dialog, showDialog, showErrorMessage
 } from '@jupyterlab/apputils';
 
 import {
@@ -29,12 +24,8 @@ import {
 } from '@jupyterlab/filebrowser';
 
 import {
-  Widget, BoxLayout //, Menu
+  Widget
 } from '@phosphor/widgets';
-
-import {
-  Message
-} from '@phosphor/messaging';
 
 import {
   IMainMenu
@@ -48,10 +39,7 @@ import {
   IRenderMimeRegistry
 } from '@jupyterlab/rendermime';
 
-import { CreateVoyager, Voyager } from 'datavoyager/build/lib-voyager';
-import { VoyagerConfig } from 'datavoyager/build/models/config';
 import 'datavoyager/build/style.css';
-import { read } from 'vega-loader';
 
 import {
   INotebookTracker, NotebookPanel, NotebookTracker, NotebookModel,NotebookActions
@@ -61,43 +49,23 @@ import {
 } from '@jupyterlab/cells';
 
 import {
-  ReadonlyJSONObject,PromiseDelegate,JSONExt
+  ReadonlyJSONObject,JSONExt
 } from '@phosphor/coreutils';
 
 import {VoyagerTutorialWidget} from './tutorial'
-
+import {VoyagerPanel,VoyagerPanel_DF} from './voyagerpanel'
 import '../style/index.css';
 //import { CommandRegistry } from '@phosphor/commands';
 //import { Contents } from '@jupyterlab/services';
 
 const VOYAGER_ICON = 'jp-VoyagerIcon';
-const VOYAGER_PANEL_TOOLBAR_CLASS = 'jp-VoyagerPanel-toolbar';
-/**
- * The class name added to toolbar save button.
- */
-const TOOLBAR_SAVE_CLASS = 'jp-SaveIcon';
-
-/**
- * The class name added to toolbar insert button.
- */
-const TOOLBAR_SAVE_AS_CLASS = 'jp-SaveAsIcon';
-
-/**
- * The class name added to toolbar cut button.
- */
-const TOOLBAR_UNDO_CLASS = 'jp-UndoIcon';
-
-/**
- * The class name added to toolbar copy button.
- */
-const TOOLBAR_REDO_CLASS = 'jp-RedoIcon';
-
 /**
  * The class name added to a datavoyager widget.
  */
 const Voyager_CLASS = 'jp-Voyager';
 
 const SOURCE = require('../tutorial/tutorial.md');
+var temp_widget_counter = 0;
 
 //import { ReactChild } from 'react';
 export namespace CommandIDs {
@@ -108,7 +76,7 @@ export namespace CommandIDs {
   export
   const JL_Voyager_Save = 'voyager_graph:save';
   export
-  const JL_Voyager_Save1 = 'voyager_graph:save1';
+  const JL_Voyager_Export = 'voyager_graph:Export';
   export
   const JL_Voyager_Open = 'voyager_file:open';
   export
@@ -123,334 +91,17 @@ export namespace CommandIDs {
   const JL_Voyager_HideBar = 'voyager_graph:hidebar';
 }
 
-export
-function createSaveButton(widget: VoyagerPanel): ToolbarButton {
-  return new ToolbarButton({
-    className: TOOLBAR_SAVE_CLASS,
-    onClick: () => {
-      if(widget&&widget.hasClass(Voyager_CLASS)&&(widget as VoyagerPanel).context.path.indexOf('vl.json')!==-1){
-        var datavoyager = (widget as VoyagerPanel).voyager_cur;
-        var dataSrc = (widget as VoyagerPanel).data_src;
-        let spec = datavoyager.getSpec(false);
-        let context = widget.context as Context<DocumentRegistry.IModel>;
-        context.model.fromJSON({
-          "data":dataSrc, 
-          "mark": spec.mark, 
-          "encoding": spec.encoding, 
-          "height":spec.height, 
-          "width":spec.width, 
-          "description":spec.description,
-          "name":spec.name,
-          "selection":spec.selection,
-          "title":spec.title,
-          "transform":spec.transform
-        });
-        context.save();
-      }
-      else{
-        showDialog({
-          title: "Warning",
-          body: "File must end in vl.json to save, use 'Save As' instead",
-          buttons: [Dialog.warnButton({ label: "OK"})]
-        })
-      }
-    },
-    tooltip: 'Save the current voyager contents',    
-  });
-}
-
-export
-function createSaveAsButton(widget: VoyagerPanel): ToolbarButton {
-  return new ToolbarButton({
-    className: TOOLBAR_SAVE_AS_CLASS,
-    onClick: () => {
-      var datavoyager = (widget as VoyagerPanel).voyager_cur;
-      var dataSrc = (widget as VoyagerPanel).data_src;
-      //let aps = datavoyager.getApplicationState();
-      let spec = datavoyager.getSpec(false);
-      //let context = docManager.contextForWidget(widget) as Context<DocumentRegistry.IModel>;
-      let context = widget.context as Context<DocumentRegistry.IModel>;
-      context.model.fromJSON({
-        "data":dataSrc, 
-        "mark": spec.mark, 
-        "encoding": spec.encoding, 
-        "height":spec.height, 
-        "width":spec.width, 
-        "description":spec.description,
-        "name":spec.name,
-        "selection":spec.selection,
-        "title":spec.title,
-        "transform":spec.transform
-      });
-      //context.model.fromJSON(spec);
-      context.saveAs();
-    },
-    tooltip: 'Save the current voyager contents to a vl.json file'
-  });
-}
-
-export
-function createUndoButton(widget: VoyagerPanel): ToolbarButton {
-  return new ToolbarButton({
-    className: TOOLBAR_UNDO_CLASS,
-    onClick: () => {
-      (widget as VoyagerPanel).voyager_cur.undo();
-    },
-    tooltip: 'Update state to reflect the previous state'
-  });
-}
-
-export
-function createRedoButton(widget: VoyagerPanel): ToolbarButton {
-  return new ToolbarButton({
-    className: TOOLBAR_REDO_CLASS,
-    onClick: () => {
-      (widget as VoyagerPanel).voyager_cur.redo();
-    },
-    tooltip: 'Update state to reflect the future state'
-  });
-}
-
-export
-function createBookMarkButton(widget: VoyagerPanel): ToolbarButton {
-  return new ToolbarButton({
-    className: TOOLBAR_REDO_CLASS,
-    onClick: () => {
-      (widget as VoyagerPanel).voyager_cur.getBookmarkedSpecs();
-    },
-    tooltip: 'display all the bookmarks'
-  });
-}
-
-export
-function isValidFileName(name: string): boolean {
-  const validNameExp = /[\/\\:]/;
-  return name.length > 0 && !validNameExp.test(name);
-}
-
-function isValidURL(str:string) {
-  var a  = document.createElement('a');
-  a.href = str;
-  return (a.host && a.host != window.location.host);
-}
-
-/**
- * A namespace for `VoyagerPanel` statics.
- */
-export
-namespace VoyagerPanel {
-  /**
-   * Instantiation options for Voyager widgets.
-   */
-  export
-  interface IOptions {
-    /**
-     * The document context for the Voyager being rendered by the widget.
-     */
-    context: DocumentRegistry.Context;
-    fileType: string;
-  }
-}
-export
-class VoyagerPanel extends Widget implements DocumentRegistry.IReadyWidget {
-  static config: VoyagerConfig = {
-    // don't allow user to select another data source from Voyager UI
-    showDataSourceSelector: false,
-    serverUrl: null,
-    hideHeader: true,
-    hideFooter: true,
-    relatedViews: 'initiallyCollapsed',
-    wildcards: 'enabled'
-
-  }
-  public voyager_cur: Voyager;
-  public voyager_widget: Widget;
-  public data_src:any;
-  public fileType: String;
-  public toolbar:Toolbar<Widget>;
-  // it would make sense to resolve this promise after we have parsed the data
-  // and created the Voyager component, but this will trigger an attempted
-  // cleanup of the spinner element, which will already have been deleted
-  // by the Voyager constructor and so will raise an exception.
-  // So instead we just never resolve this promise, which still gives us the
-  // spinner until Voyager overwrites the element.
-
-  constructor(options: VoyagerPanel.IOptions) {
-    super();
-    this.addClass(Voyager_CLASS);
-    const context = this._context = options.context;
-    this.fileType = options.fileType;
-
-    this.title.label = PathExt.basename(context.path);
-    context.pathChanged.connect(this._onPathChanged, this);
-    this._onPathChanged();
-
-    let layout = this.layout = new BoxLayout();
-
-    this.voyager_widget = new Widget();
-
-    this._context.ready.then(_ => {
-      this._ready.resolve(undefined);
-      const data = context.model.toString();
-      var values;
-      if(this.fileType==='txt'){
-        values = read(data, { type: 'json' });
-      }
-      else{
-        console.log(data)
-        values = read(data, { type: this.fileType });
-        console.log(values)
-      }
-      if(this.fileType==='json'||this.fileType==='txt'){
-        if(values['data']){
-          var DATA = values['data'];
-          this.data_src = DATA;
-          console.log(values['data']);
-          if(DATA['url']){ //check if it's url type datasource
-            if(!isValidURL(DATA['url'])){
-              
-              console.log('local url');
-              let basePath = path.resolve('.');
-              let wholePath = path.join(basePath, DATA['url'])
-              console.log(wholePath)
-              //let local_content = fs.readFileSync(wholePath, 'utf8');
-              //let local_filetype = PathExt.extname( DATA['url'])
-              /*
-              console.log(basePath);
-              console.log(local_filetype);
-              console.log(local_content);
-              values = read(local_content, { type: local_filetype });*/
-              this.voyager_cur = CreateVoyager(this.voyager_widget.node, VoyagerPanel.config, values['data']);
-            }
-            else{
-              console.log('web url')
-              this.voyager_cur = CreateVoyager(this.voyager_widget.node, VoyagerPanel.config, values['data']);
-            } 
-          }
-          else if(DATA['values']){ //check if it's array value data source
-           this.voyager_cur = CreateVoyager(this.voyager_widget.node, VoyagerPanel.config, values['data']);
-          }
-          else{//other conditions, just try to pass the value to voyager and wish the best
-            this.voyager_cur = CreateVoyager(this.voyager_widget.node, VoyagerPanel.config, values['data']);
-            this.data_src = values['data'];
-          }
-        }
-        else{ //other conditions, just try to pass the value to voyager and wish the best
-          this.voyager_cur = CreateVoyager(this.voyager_widget.node, VoyagerPanel.config, { values });
-          this.data_src = {values};
-        }
-        console.log('mark": '+values['mark']);
-        console.log('encoding '+values['encoding']);
-        console.log('config '+values['config']);
-        
-        //update the specs if possible
-        this.voyager_cur.setSpec({
-            "mark": values['mark'], 
-            "encoding": values['encoding'], 
-            "height":values['height'], 
-            "width":values['width'], 
-            "description":values['description'],
-            "name":values['name'],
-            "selection":values['selection'],
-            "title":values['title'],
-            "transform":values['transform']
-        });
-
-      }
-      else{
-        this.voyager_cur = CreateVoyager(this.voyager_widget.node, VoyagerPanel.config, { values });
-        this.data_src = {values};
-      }
-    })
-
-    // Toolbar
-    this.toolbar = new Toolbar();
-    this.toolbar.addClass(VOYAGER_PANEL_TOOLBAR_CLASS);
-    this.toolbar.addItem('save', createSaveButton(this));
-    this.toolbar.addItem('saveAs', createSaveAsButton(this));
-    this.toolbar.addItem('undo', createUndoButton(this));
-    this.toolbar.addItem('redo', createRedoButton(this));
-    this.toolbar.addItem('Bookmarks', createBookMarkButton(this));
-
-    layout.addWidget(this.toolbar);
-    layout.addWidget(this.voyager_widget);
-
-    BoxLayout.setStretch(this.toolbar, 0);
-    BoxLayout.setStretch(this.voyager_widget, 1);
-
-    this.toolbar.hide();
-  }
-
-  /**
-   * Get the context for the editor widget.
-   */
-  get context(): DocumentRegistry.Context {
-    if(this._context.path.indexOf('vl.json')!==-1){
-    var datavoyager = this.voyager_cur;
-    var dataSrc = this.data_src;
-    //let aps = datavoyager.getApplicationState();
-    let spec = datavoyager.getSpec(false);
-    this._context.model.fromJSON({
-      "data":dataSrc, 
-      "mark": spec.mark, 
-      "encoding": spec.encoding, 
-      "height":spec.height, 
-      "width":spec.width, 
-      "description":spec.description,
-      "name":spec.name,
-      "selection":spec.selection,
-      "title":spec.title,
-      "transform":spec.transform
-    });
-    }
-    //context.model.fromJSON(spec);
-    //this._context.save();
-    return this._context;
-  }
-
-  /**
-   * A promise that resolves when the file editor is ready.
-   */
-  get ready(): Promise<void> {
-    return this._ready.promise;
-  }
-
-  private _onPathChanged(): void {
-    this.title.label = PathExt.basename(this._context.localPath);
-  }
-
-  /**
-   * Dispose of the resources used by the widget.
-   */
-  dispose(): void {
-    if (this._monitor) {
-      this._monitor.dispose();
-    }
-    super.dispose();
-  }
-
-    /**
-   * Handle `'activate-request'` messages.
-   */
-  protected onActivateRequest(msg: Message): void {
-    this.voyager_widget.node.tabIndex = -1;
-    this.voyager_widget.node.focus();
-  }
-
-  protected _context: DocumentRegistry.Context;
-  private _ready = new PromiseDelegate<void>();
-  private _monitor: ActivityMonitor<any, any> | null = null;
-  
-}
 
 class VoyagerWidgetFactory extends ABCWidgetFactory<VoyagerPanel, DocumentRegistry.IModel> {
   // pass fileType into constructor so we know what it is and can pass it to vega-loader
   // to get the data
-  constructor(private fileType: string, options: DocumentRegistry.IWidgetFactoryOptions) {
+  docManager: IDocumentManager;
+  constructor(private fileType: string, docManager: IDocumentManager, options: DocumentRegistry.IWidgetFactoryOptions) {
     super(options);
+    this.docManager = docManager;
   }
   protected createNewWidget(context: DocumentRegistry.Context): VoyagerPanel {
-    return new VoyagerPanel({context, fileType: this.fileType});
+    return new VoyagerPanel({context, fileType: this.fileType},this.docManager);
   }
 
 }
@@ -505,6 +156,10 @@ class VoyagerNotebookWidgetFactory extends ABCWidgetFactory<NotebookPanel, Docum
 
 }
 
+function isValidFileName(name: string): boolean {
+  const validNameExp = /[\/\\:]/;
+  return name.length > 0 && !validNameExp.test(name);
+}
 
 const fileTypes = ['csv', 'json', 'tsv', 'txt'];
 const fileTypes_vega = ['vega-lite2','vega3'];
@@ -528,7 +183,7 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
 
   function createNew(cwd: string, data: any, open:boolean) {
     let input_block = document.createElement("div");
-    let input_prompt = document.createElement("li");
+    let input_prompt = document.createElement("div");
     input_prompt.textContent = 'name this file for current data';
     let input = document.createElement("input");
     input_block.appendChild(input_prompt);
@@ -585,12 +240,12 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
 
 
   commands.addCommand(CommandIDs.JL_Graph_Voyager, {
-    label: 'Open in Voyager',
+    label: 'Open Graph in Voyager',
     caption: 'Open the datasource in Voyager',
     execute: args => {
       const cur = getCurrent(args);
       if(cur){
-        //var filename = cur.id+'_Voyager';
+        var filename = cur.id+'_Voyager';
         let cell = cur.notebook.activeCell;
         if(cell.model.type==='code'){
           let codeCell = (cur.notebook.activeCell as CodeCell);
@@ -609,13 +264,17 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
               }
               console.log('type is application/vnd.vegalite.v2+json')
               console.log(JSONobject)
-              let ll = app.shell.widgets('left');
-              let fb = ll.next();
-              while((fb as any).id!='filebrowser'){
-                fb = ll.next();
-              }
-              let path = (fb as any).model.path as string;
-              createNew(path, JSONobject, true);
+              let context = docManager.contextForWidget(cur) as Context<DocumentRegistry.IModel>;
+              var wdg = new VoyagerPanel_DF(JSONobject, filename, context, false);		
+              wdg.data_src = JSONobject;
+              wdg.id = filename+(temp_widget_counter++);		
+              wdg.title.closable = true;		
+              wdg.title.iconClass = VOYAGER_ICON;		
+              const tracker = new InstanceTracker<VoyagerPanel_DF>({ namespace: 'VoyagerPanel_DataFrame' });  
+              tracker.add(wdg);
+              app.shell.addToMainArea(wdg);
+              app.shell.activateById(wdg.id)
+              console.log('widget id is: '+ wdg.id)
               break;
             }
             i++;
@@ -627,13 +286,14 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
 
 
   commands.addCommand(CommandIDs.JL_Table_Voyager, {
-    label: 'Open in Voyager',
+    label: 'Open table in Voyager',
     caption: 'Open the datasource in Voyager',
     execute: args => {
       console.log('open table in voyager')
       const cur = getCurrent(args);
       console.log(cur)
       if(cur){
+        var filename = cur.id+'_Voyager';
         let cell = cur.notebook.activeCell;
         console.log(cell.model.type)
         if(cell.model.type==='code'){
@@ -647,26 +307,33 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
             if(!!outputs.get(i).data['application/vnd.dataresource+json']){
               var JSONobject = (outputs.get(i).data['application/vnd.dataresource+json'] as any).data;
               console.log(JSONobject)
-              let ll = app.shell.widgets('left');
-              let fb = ll.next();
-              while((fb as any).id!='filebrowser'){
-                fb = ll.next();
-              }
-              let path = (fb as any).model.path as string;
-              createNew(path, {'data':{'values':JSONobject}}, true);
+              let context = docManager.contextForWidget(cur) as Context<DocumentRegistry.IModel>;
+              var wdg = new VoyagerPanel_DF({'values':JSONobject}, filename,context, true);	
+              wdg.data_src = {'values':JSONobject};
+              wdg.id = filename+(temp_widget_counter++);	
+              wdg.title.closable = true;		
+              wdg.title.iconClass = VOYAGER_ICON;
+              const tracker = new InstanceTracker<VoyagerPanel_DF>({ namespace: 'VoyagerPanel_DataFrame' });  
+              tracker.add(wdg);
+              app.shell.addToMainArea(wdg);
+              app.shell.activateById(wdg.id);
+              console.log('widget id is: '+ wdg.id)
               break;
             }
             else if(!!outputs.get(i).data['text/plain']){
               var JSONobject = outputs.get(i).data['text/plain'] as any;
               console.log(JSONobject)
-              var values = read(JSONobject, { type: 'csv' });
-              let ll = app.shell.widgets('left');
-              let fb = ll.next();
-              while((fb as any).id!='filebrowser'){
-                fb = ll.next();
-              }
-              let path = (fb as any).model.path as string;
-              createNew(path, {'data':{'values':values}}, true);
+              let context = docManager.contextForWidget(cur) as Context<DocumentRegistry.IModel>;
+              var wdg = new VoyagerPanel_DF({'values':JSONobject}, filename,context,true);
+              wdg.data_src = {'values':JSONobject};	
+              wdg.id = filename+(temp_widget_counter++);		
+              wdg.title.closable = true;	
+              wdg.title.iconClass = VOYAGER_ICON;	
+              const tracker = new InstanceTracker<VoyagerPanel_DF>({ namespace: 'VoyagerPanel_DataFrame' });  
+              tracker.add(wdg);
+              app.shell.addToMainArea(wdg);
+              app.shell.activateById(wdg.id);
+              console.log('widget id is: '+ wdg.id)
               break;
             }
             i++;
@@ -704,7 +371,9 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
         context.save();
       }
     },
-    isEnabled: () =>{      
+    isEnabled: () =>{
+      return false;
+      /*      
       let widget = app.shell.currentWidget;
       if(widget&&widget.hasClass(Voyager_CLASS)&&(widget as VoyagerPanel).context.path.indexOf('vl.json')!==-1){
         return true;
@@ -712,33 +381,23 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
       else{
         return false;
       }
+      */
     }
   });
 
-  commands.addCommand(CommandIDs.JL_Voyager_Save1, {
+  commands.addCommand(CommandIDs.JL_Voyager_Export, {
     label: 'Export Voyager as vl.json',
     caption: 'Export the chart datasource as vl.json file',
     execute: args => {
       let widget = app.shell.currentWidget;
-      
       if(widget){
-          var datavoyager = (widget as VoyagerPanel).voyager_cur;
-          var dataSrc = (widget as VoyagerPanel).data_src;
+        console.log(widget.id)
+        console.log(widget.hasClass(Voyager_CLASS))
+
+          var datavoyager = (widget as VoyagerPanel|VoyagerPanel_DF).voyager_cur;
+          var dataSrc = (widget as VoyagerPanel|VoyagerPanel_DF).data_src;
           //let aps = datavoyager.getApplicationState();
           let spec = datavoyager.getSpec(false);
-          let context = docManager.contextForWidget(widget) as Context<DocumentRegistry.IModel>;
-          context.model.fromJSON({
-            "data":dataSrc, 
-            "mark": spec.mark, 
-            "encoding": spec.encoding, 
-            "height":spec.height, 
-            "width":spec.width, 
-            "description":spec.description,
-            "name":spec.name,
-            "selection":spec.selection,
-            "title":spec.title,
-            "transform":spec.transform
-          });
           let ll = app.shell.widgets('left');
           let fb = ll.next();
           while((fb as any).id!='filebrowser'){
@@ -761,8 +420,8 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
     },
     isEnabled: () =>{      
       let widget = app.shell.currentWidget;
-      if(widget&&widget.hasClass(Voyager_CLASS)){
-        return true;
+      if(widget&&widget.hasClass(Voyager_CLASS)&&(widget as VoyagerPanel|VoyagerPanel_DF).context.path.indexOf('vl.json')===-1){
+          return true;
       }
       else{
         return false;
@@ -899,11 +558,11 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
       execute: args => {
         let widget = app.shell.currentWidget;
         if(widget){
-          if((widget as VoyagerPanel).toolbar.isHidden){
-            (widget as VoyagerPanel).toolbar.show();
+          if((widget as VoyagerPanel|VoyagerPanel_DF).toolbar.isHidden){
+            (widget as VoyagerPanel|VoyagerPanel_DF).toolbar.show();
           }
           else{
-            (widget as VoyagerPanel).toolbar.hide();
+            (widget as VoyagerPanel|VoyagerPanel_DF).toolbar.hide();
           }
         }
       },
@@ -965,7 +624,7 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
     execute: args => {
       let widget = app.shell.currentWidget;
       if(widget){
-        (widget as VoyagerPanel).voyager_cur.undo();
+        (widget as VoyagerPanel|VoyagerPanel_DF).voyager_cur.undo();
       }
     },
   });
@@ -976,7 +635,7 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
     execute: args => {
       let widget = app.shell.currentWidget;
       if(widget){
-        (widget as VoyagerPanel).voyager_cur.redo();
+        (widget as VoyagerPanel|VoyagerPanel_DF).voyager_cur.redo();
       }
     },
   });
@@ -992,9 +651,10 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
 
   mainMenu.helpMenu.addGroup([{command:CommandIDs.JL_Voyager_Tutorial}], 0)
 
-  mainMenu.fileMenu.addGroup([{command:CommandIDs.JL_Voyager_Save},{command:CommandIDs.JL_Voyager_Save1}], 10)
+  mainMenu.fileMenu.addGroup([{command:CommandIDs.JL_Voyager_Save},{command:CommandIDs.JL_Voyager_Export}], 10)
 
   //add phosphor context menu for voyager, for the "save", "save as", "undo", "redo" functions
+  /*
   app.contextMenu.addItem({
     command: CommandIDs.JL_Voyager_Undo,
     selector: '.p-Widget.jp-Voyager.jp-Document.jp-Activity.p-DockPanel-widget',
@@ -1021,10 +681,41 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
     rank:4
   });
   app.contextMenu.addItem({
-    command: CommandIDs.JL_Voyager_Save1,
+    command: CommandIDs.JL_Voyager_Export,
     selector: '.p-Widget.jp-Voyager.jp-Document.jp-Activity.p-DockPanel-widget',
     rank:5
-  });
+  });*/
+    //add phosphor context menu for voyager_dataframe, for the "save", "save as", "undo", "redo" functions
+    app.contextMenu.addItem({
+      command: CommandIDs.JL_Voyager_Undo,
+      selector: '.voyager',
+      rank:0
+    });
+    app.contextMenu.addItem({
+      command: CommandIDs.JL_Voyager_Redo,
+      selector: '.voyager',
+      rank: 1
+    });
+    app.contextMenu.addItem({
+      type: 'separator',
+      selector: '.voyager',
+      rank: 2
+    });
+    app.contextMenu.addItem({
+      command: CommandIDs.JL_Voyager_HideBar,
+      selector: '.voyager',
+      rank:3
+    });
+    app.contextMenu.addItem({
+      command: CommandIDs.JL_Voyager_Save,
+      selector: '.voyager',
+      rank:4
+    });
+    app.contextMenu.addItem({
+      command: CommandIDs.JL_Voyager_Export,
+      selector: '.voyager',
+      rank:5
+    });
 
   //add context menu for altair image ouput
   app.contextMenu.addItem({
@@ -1062,6 +753,7 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
     const tracker1 = new InstanceTracker<VoyagerPanel>({ namespace: factoryName });  
     const factory = new VoyagerWidgetFactory(
       ft,
+      docManager,
       {
         name: factoryName,
         fileTypes: [ft],
@@ -1093,14 +785,11 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
       tracker1.add(widget);
       widget.context.pathChanged.connect(()=>{tracker1.save(widget);});
       widget.title.iconClass = VOYAGER_ICON;
+/*
       if (ftObj) {
-        /*
-        if (ftObj.iconClass)
-          widget.title.iconClass = ftObj.iconClass;
-          */
         if (ftObj.iconLabel)
           widget.title.iconLabel = ftObj.iconLabel;
-      }
+      }*/
     });
     
   });

@@ -6,7 +6,7 @@
 :root {
     --jp-Voyager-icon: url('./Images/VoyagerIcon.png');
     --jp-Save-icon: url('./Images/SaveIcon.svg');
-    --jp-SaveAs-icon: url('./Images/SaveAsIcon.png');
+    --jp-Export-icon: url('./Images/ExportIcon.png');
     --jp-Undo-icon: url('./Images/UndoIcon.svg');
     --jp-Redo-icon: url('./Images/RedoIcon.svg')
 }
