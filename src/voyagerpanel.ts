@@ -140,7 +140,7 @@ function createUndoButton(widget: VoyagerPanel|VoyagerPanel_DF): ToolbarButton {
     onClick: () => {
       (widget as VoyagerPanel).voyager_cur.undo();
     },
-    tooltip: 'Update state to reflect the previous state'
+    tooltip: 'Undo'
   });
 }
 
@@ -151,7 +151,7 @@ function createRedoButton(widget: VoyagerPanel|VoyagerPanel_DF): ToolbarButton {
     onClick: () => {
       (widget as VoyagerPanel).voyager_cur.redo();
     },
-    tooltip: 'Update state to reflect the future state'
+    tooltip: 'Redo'
   });
 }
 /*
@@ -246,6 +246,11 @@ class VoyagerPanel extends Widget implements DocumentRegistry.IReadyWidget {
           console.log(values['data']);
           if(DATA['url']){ //check if it's url type datasource
             if(!isValidURL(DATA['url'])){
+              //console.log('data url is: '+DATA['url'])
+              //fetch(DATA['url']).then(response => {console.log(response)})
+              //console.log('local url')
+              //values['data']['url'] = '/files/'+values['data']['url']
+              //this.voyager_cur = CreateVoyager(this.voyager_widget.node, VoyagerPanel.config, values['data']);
               
               console.log('local url');
               let basePath = PathExt.dirname(this._context.localPath)
@@ -268,16 +273,7 @@ class VoyagerPanel extends Widget implements DocumentRegistry.IReadyWidget {
                   "title":values['title'],
                   "transform":values['transform']
               });
-
-              })
-              //let local_content = fs.readFileSync(wholePath, 'utf8');
-              //let local_filetype = PathExt.extname( DATA['url'])
-              /*
-              console.log(basePath);
-              console.log(local_filetype);
-              console.log(local_content);
-              values = read(local_content, { type: local_filetype });*/
-              
+              })            
             }
             else{
               console.log('web url')
@@ -422,7 +418,7 @@ class VoyagerPanel_DF extends Widget implements DocumentRegistry.IReadyWidget {
   private _ready = new PromiseDelegate<void>();
   private _monitor: ActivityMonitor<any, any> | null = null;
 
-  constructor(data: any, fileName: string, context:Context<DocumentRegistry.IModel>, isTable:boolean) {
+  constructor(data: any, fileName: string, context:Context<DocumentRegistry.IModel>, isTable:boolean,docManager: IDocumentManager) {
     super();
     this.addClass(Voyager_CLASS);
     this._context = context;
@@ -436,7 +432,40 @@ class VoyagerPanel_DF extends Widget implements DocumentRegistry.IReadyWidget {
       this.voyager_cur = CreateVoyager(this.voyager_widget.node, VoyagerPanel.config, data);
     }
     else{
-      this.voyager_cur = CreateVoyager(this.voyager_widget.node, VoyagerPanel.config, data['data']);
+      var DATA = data['data'];
+      this.data_src = DATA;
+      console.log(data['data']);
+      if(DATA['url']){ //check if it's url type datasource
+      //console.log('dataurl is: '+DATA['url'])
+      //fetch(DATA['url']).then(response => {console.log(response.json())})
+
+        if(!isValidURL(DATA['url'])){
+          
+          console.log('local url');
+          let basePath = PathExt.dirname(this._context.localPath)
+          console.log(basePath)
+          let filePath = PathExt.basename(DATA['url'])
+          let wholePath = path.join(basePath, filePath)
+          console.log(wholePath)
+
+          docManager.services.contents.get(wholePath).then(src=>{
+            console.log(src.content);
+            let local_filetype = PathExt.extname(DATA['url']).substring(1);
+            let local_values = read(src.content, { type: local_filetype })
+            this.voyager_cur = CreateVoyager(this.voyager_widget.node, VoyagerPanel.config, {'values':local_values});
+          })          
+        }
+        else{
+          console.log('web url')
+          this.voyager_cur = CreateVoyager(this.voyager_widget.node, VoyagerPanel.config, data['data']);
+        } 
+      }
+      else if(DATA['values']){ //check if it's array value data source
+       this.voyager_cur = CreateVoyager(this.voyager_widget.node, VoyagerPanel.config, data['data']);
+      }
+      else{//other conditions, just try to pass the value to voyager and wish the best
+        this.voyager_cur = CreateVoyager(this.voyager_widget.node, VoyagerPanel.config, data['data']);
+      }
       this.voyager_cur.setSpec({
         "mark": data['mark'], 
         "encoding": data['encoding'], 

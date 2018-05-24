@@ -80,6 +80,8 @@ export namespace CommandIDs {
   export
   const JL_Voyager_Export = 'voyager_graph:Export';
   export
+  const JL_Voyager_Export_To_Notebook = 'voyager_graph:Export_to_notebook';
+  export
   const JL_Voyager_Open = 'voyager_file:open';
   export
   const JL_Voyager_Open_In_Notebook = 'voyager_VL_JSON_file:open_in_notebook';
@@ -98,12 +100,13 @@ class VoyagerWidgetFactory extends ABCWidgetFactory<VoyagerPanel, DocumentRegist
   // pass fileType into constructor so we know what it is and can pass it to vega-loader
   // to get the data
   docManager: IDocumentManager;
-  constructor(private fileType: string, docManager: IDocumentManager, options: DocumentRegistry.IWidgetFactoryOptions) {
+  constructor(docManager: IDocumentManager, options: DocumentRegistry.IWidgetFactoryOptions) {
     super(options);
     this.docManager = docManager;
   }
   protected createNewWidget(context: DocumentRegistry.Context): VoyagerPanel {
-    return new VoyagerPanel({context, fileType: this.fileType},this.docManager);
+    let ft = PathExt.extname(context.localPath).substring(1)
+    return new VoyagerPanel({context, fileType: ft},this.docManager);
   }
 
 }
@@ -265,7 +268,7 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
               console.log('type is application/vnd.vegalite.v2+json')
               console.log(JSONobject)
               let context = docManager.contextForWidget(cur) as Context<DocumentRegistry.IModel>;
-              var wdg = new VoyagerPanel_DF(JSONobject, filename, context, false);		
+              var wdg = new VoyagerPanel_DF(JSONobject, filename, context, false,docManager);		
               wdg.data_src = JSONobject;
               wdg.id = filename+(temp_widget_counter++);		
               wdg.title.closable = true;		
@@ -308,7 +311,7 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
               var JSONobject = (outputs.get(i).data['application/vnd.dataresource+json'] as any).data;
               console.log(JSONobject)
               let context = docManager.contextForWidget(cur) as Context<DocumentRegistry.IModel>;
-              var wdg = new VoyagerPanel_DF({'values':JSONobject}, filename,context, true);	
+              var wdg = new VoyagerPanel_DF({'values':JSONobject}, filename,context, true, docManager);	
               wdg.data_src = {'values':JSONobject};
               wdg.id = filename+(temp_widget_counter++);	
               wdg.title.closable = true;		
@@ -324,7 +327,7 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
               var JSONobject = outputs.get(i).data['text/plain'] as any;
               console.log(JSONobject)
               let context = docManager.contextForWidget(cur) as Context<DocumentRegistry.IModel>;
-              var wdg = new VoyagerPanel_DF({'values':JSONobject}, filename,context,true);
+              var wdg = new VoyagerPanel_DF({'values':JSONobject}, filename,context,true, docManager);
               wdg.data_src = {'values':JSONobject};	
               wdg.id = filename+(temp_widget_counter++);		
               wdg.title.closable = true;	
@@ -466,6 +469,77 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
     }
   });
 
+  commands.addCommand(CommandIDs.JL_Voyager_Export_To_Notebook, {
+    label: 'Export Voyager to Notebook',
+    caption: 'Export the chart datasource to a new Notebook',
+    execute: args => {
+      let widget = app.shell.currentWidget;
+      if(widget){
+        console.log(widget.id)
+        console.log(widget.hasClass(Voyager_CLASS))
+
+          var datavoyager = (widget as VoyagerPanel|VoyagerPanel_DF).voyager_cur;
+          var dataSrc = (widget as VoyagerPanel|VoyagerPanel_DF).data_src;
+          let spec = datavoyager.getSpec(false);
+          console.log(spec)
+          let src =JSON.stringify({
+            "data":dataSrc, 
+            "mark": spec.mark, 
+            "encoding": spec.encoding, 
+            "height":spec.height, 
+            "width":spec.width, 
+            "description":spec.description,
+            "name":spec.name,
+            "selection":spec.selection,
+            "title":spec.title,
+            "transform":spec.transform
+            });
+          let ll = app.shell.widgets('left');
+          let fb = ll.next();
+          while((fb as any).id!='filebrowser'){
+            fb = ll.next();
+          }
+          let path = (fb as any).model.path as string;
+          return commands.execute('docmanager:new-untitled', {
+            path: path, type: 'notebook'
+          }).then(model => {
+            return commands.execute('docmanager:open', {
+              path: model.path, factory: 'Notebook', kernel:{name: 'Python 3'}
+            }).then(widget=>{
+              let md = (widget as NotebookPanel).notebook.model.toJSON() as nbformat.INotebookContent;
+              let model = new NotebookModel();
+              md.cells = [{
+                "cell_type": "code",
+                "execution_count": null,
+                "metadata": {},
+                "outputs": [],
+                "source": [
+                  "import altair as alt\n",
+                  "import pandas as pd\n",
+                  "import json\n",
+                  `data_src = json.loads('${src}')\n`,
+                  "alt.Chart.from_dict(data_src)\n",
+                ]
+               }];
+              model.fromJSON(md);
+              (widget as NotebookPanel).notebook.model = model;
+              widget.context.save();
+              NotebookActions.runAll(widget.notebook, widget.context.session);
+            });
+          });         
+      }
+    },
+    isEnabled: () =>{      
+      let widget = app.shell.currentWidget;
+      if(widget&&widget.hasClass(Voyager_CLASS)&&((widget as VoyagerPanel|VoyagerPanel_DF).voyager_cur.getSpec(false)!==undefined)){
+          return true;
+      }
+      else{
+        return false;
+      }
+    }
+  });
+
   commands.addCommand(CommandIDs.JL_Voyager_Open, {
     label: 'Open file in Voyager',
     caption: 'Open the selected file(s) in Voyager',
@@ -543,14 +617,13 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
             "import json\n",
             `with open('${name}') as json_data:\n`,
             "    data_src = json.load(json_data)\n",
-            "data = data_src['data']\n",
             "alt.Chart.from_dict(data_src)\n",
           ]
          }];
         model.fromJSON(md);
         (widget as NotebookPanel).notebook.model = model;
         widget.context.save();
-        NotebookActions.runAll(widget.notebook, widget.context.session);
+        NotebookActions.runAndAdvance(widget.notebook, widget.context.session);
       });
     });
   };
@@ -674,6 +747,21 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
       if(widget){
         (widget as VoyagerPanel|VoyagerPanel_DF).voyager_cur.redo();
       }
+      const { currentWidget } = app.shell;
+      if(currentWidget){
+        console.log('currentwidget: '+true);
+        if(docManager.contextForWidget(currentWidget)){
+          console.log('contextforwidget: '+true)
+        }
+        else{
+          console.log('contextforwidget: '+false)
+        }
+      }
+      else{
+        console.log('currentwidget: '+false)
+      }
+
+      console.log('File menu save option enable: '+!!(currentWidget && docManager.contextForWidget(currentWidget)));
     },
   });
 /*
@@ -744,14 +832,24 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
       rank:3
     });
     app.contextMenu.addItem({
+      type: 'separator',
+      selector: '.voyager',
+      rank: 4
+    });
+    app.contextMenu.addItem({
       command: CommandIDs.JL_Voyager_Save1,
       selector: '.voyager',
-      rank:4
+      rank:5
     });
     app.contextMenu.addItem({
       command: CommandIDs.JL_Voyager_Export,
       selector: '.voyager',
-      rank:5
+      rank:6
+    });
+    app.contextMenu.addItem({
+      command: CommandIDs.JL_Voyager_Export_To_Notebook,
+      selector: '.voyager',
+      rank:7
     });
 
   //add context menu for altair image ouput
@@ -785,20 +883,18 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
     extensions: ['.txt']
   });
 
-  fileTypes.map(ft => {
-    const factoryName = `Voyager (${ft})`;
+  //fileTypes.map(ft => {
+    //const factoryName = `Voyager (${ft})`;
+    const factoryName = `Voyager`;
     const tracker1 = new InstanceTracker<VoyagerPanel>({ namespace: factoryName });  
     const factory = new VoyagerWidgetFactory(
-      ft,
       docManager,
       {
         name: factoryName,
-        fileTypes: [ft],
+        fileTypes: ['csv', 'json', 'tsv', 'txt'],
         readOnly: true
       }
     );
-    
-
     // Handle state restoration.
     
     restorer.restore(tracker1, {
@@ -808,49 +904,56 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
     });
 
     app.docRegistry.addWidgetFactory(factory);
-    let ftObj = app.docRegistry.getFileType(ft);
-    
-    if(ftObj==undefined){
-      console.log("app docreg getfile type: undefined");
-    }
-    else{
-      console.log("app docreg getfile type: "+ftObj.name);
-    }
-    
+
     factory.widgetCreated.connect((sender, widget) => {
       // Track the widget.
       tracker1.add(widget);
       widget.context.pathChanged.connect(()=>{tracker1.save(widget);});
       widget.title.iconClass = VOYAGER_ICON;
-/*
-      if (ftObj) {
-        if (ftObj.iconLabel)
-          widget.title.iconLabel = ftObj.iconLabel;
-      }*/
     });
-    
-  });
 
-  fileTypes_vega.map(ft => {
-    const factoryName = `Vegalite in New Notebook`;
-    const tracker1 = new InstanceTracker<NotebookPanel>({ namespace: factoryName });  
-    const factory = new VoyagerNotebookWidgetFactory(
+    fileTypes.map(ft => {
+      let ftObj = app.docRegistry.getFileType(ft);
+      if(ftObj==undefined){
+        console.log("app docreg getfile type: undefined");
+      }
+      else{
+        console.log("app docreg getfile type: "+ftObj.name);
+      }
+    })
+    
+
+    
+
+/*
+  
+    const factoryName2 = `Vegalite in New Notebook`;
+    const tracker2 = new InstanceTracker<NotebookPanel>({ namespace: factoryName2 });  
+    const factory2 = new VoyagerNotebookWidgetFactory(
       app,
       {
-        name: factoryName,
-        fileTypes: [ft],
+        name: factoryName2,
+        fileTypes: ['vega-lite2','vega3'],
         readOnly: true
       }
     );
     // Handle state restoration.
     
-    restorer.restore(tracker1, {
+    restorer.restore(tracker2, {
       command: 'docmanager:open',
       args: widget => ({ path: widget.context.path, factory: factoryName }),
       name: widget => widget.context.path
     });
 
-    app.docRegistry.addWidgetFactory(factory);
+    app.docRegistry.addWidgetFactory(factory2);
+    factory.widgetCreated.connect((sender, widget) => {
+      // Track the widget.
+      tracker1.add(widget);
+      widget.context.pathChanged.connect(()=>{tracker1.save(widget);});
+      widget.title.iconClass = VOYAGER_ICON;
+    });
+
+    fileTypes_vega.map(ft => {
     let ftObj = app.docRegistry.getFileType(ft);
     
     if(ftObj==undefined){
@@ -859,24 +962,8 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
     else{
       console.log("app docreg getfile type: "+ftObj.name);
     }
-    
-    factory.widgetCreated.connect((sender, widget) => {
-      // Track the widget.
-      tracker1.add(widget);
-      widget.context.pathChanged.connect(()=>{tracker1.save(widget);});
-      widget.title.iconClass = VOYAGER_ICON;
-      if (ftObj) {
-        /*
-        if (ftObj.iconClass)
-          widget.title.iconClass = ftObj.iconClass;
-          */
-        if (ftObj.iconLabel)
-          widget.title.iconLabel = ftObj.iconLabel;
-      }
-    });
-    
-  });
-
+   })
+   */
 }
 
 //const plugin: JupyterLabPlugin<InstanceTracker<VoyagerPanel>> = {
