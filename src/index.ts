@@ -189,13 +189,13 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
   function createNew(cwd: string, data: any, open:boolean) {
     let input_block = document.createElement("div");
     let input_prompt = document.createElement("div");
-    input_prompt.textContent = 'name this file for current data';
+    input_prompt.textContent = '';
     let input = document.createElement("input");
     input_block.appendChild(input_prompt);
     input_block.appendChild(input);
     let bd = new Widget({node:input_block});
     showDialog({
-      title: "Input file name",
+      title: "Export as Vega-Lite File (.vl.json)",
       body: bd,
       buttons: [Dialog.cancelButton(), Dialog.okButton({ label: "OK"})]
     }).then(result=>{
@@ -210,7 +210,7 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
         }
         else{
           let basePath = cwd;
-          let newPath = PathExt.join(basePath, msg+'.vl.json');
+          let newPath = PathExt.join(basePath, msg.indexOf('.vl.json')!==-1?msg:msg+'.vl.json');
           return commands.execute('docmanager:new-untitled', {
             path: cwd, ext: '.vl.json', type: 'file'
           }).then(model => {
@@ -227,7 +227,7 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
                       if (open) {
                         commands.execute('docmanager:open', {
                           path: model.path,
-                          factory: `Voyager (json)`
+                          factory: `Voyager`
                         });
                       }
                     })     
@@ -380,7 +380,7 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
   });
 
   commands.addCommand(CommandIDs.JL_Voyager_Save1, {
-    label: 'Save Voyager State',
+    label: 'Save Voyager Chart',
     caption: 'Save the chart datasource as vl.json file',
     execute: args => {
       let widget = app.shell.currentWidget;
@@ -418,7 +418,7 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
   });
 
   commands.addCommand(CommandIDs.JL_Voyager_Export, {
-    label: 'Export Voyager as vl.json',
+    label: 'Export Voyager as Vega-Lite File',
     caption: 'Export the chart datasource as vl.json file',
     execute: args => {
       let widget = app.shell.currentWidget;
@@ -517,7 +517,7 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
                   "import altair as alt\n",
                   "import pandas as pd\n",
                   "import json\n",
-                  `data_src = json.loads('${src}')\n`,
+                  `data_src = json.loads('''${src}''')\n`,
                   "alt.Chart.from_dict(data_src)\n",
                 ]
                }];
@@ -615,7 +615,7 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
             "import altair as alt\n",
             "import pandas as pd\n",
             "import json\n",
-            `with open('${name}') as json_data:\n`,
+            `with open('''${name}''') as json_data:\n`,
             "    data_src = json.load(json_data)\n",
             "alt.Chart.from_dict(data_src)\n",
           ]
@@ -663,7 +663,7 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
 
     //open a vl.json file in a notebook cell
     commands.addCommand(CommandIDs.JL_Voyager_HideBar, {
-      label: 'Show/Hide toolbar',
+      label: 'Show/Hide Toolbar',
       caption: 'show or hide toolbar in voyager',
       execute: args => {
         let widget = app.shell.currentWidget;
