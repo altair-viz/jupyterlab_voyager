@@ -1,6 +1,6 @@
 {
-  "name": "jupyterlab_voyager",
-  "version": "0.1.4",
+  "name": "jupyterlab_voyager_test",
+  "version": "0.1.5",
   "description": "A JupyterLab extension for rendering CSV",
   "author": "Ji Zhang <zzhangjii@gmail.com>",
   "main": "lib/index.js",
