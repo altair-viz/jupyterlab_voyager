@@ -109,6 +109,7 @@ class VoyagerWidgetFactory extends ABCWidgetFactory<VoyagerPanel, DocumentRegist
     return new VoyagerPanel({context, fileType: ft},this.docManager);
   }
 
+
 }
 
 class VoyagerNotebookWidgetFactory extends ABCWidgetFactory<NotebookPanel, DocumentRegistry.IModel> {
@@ -168,7 +169,7 @@ function isValidFileName(name: string): boolean {
 
 const fileTypes = ['csv', 'json', 'tsv', 'txt'];
 const fileTypes_vega = ['vega-lite2','vega3'];
-function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookTracker,palette: ICommandPalette, docManager: IDocumentManager, browserFactory: IFileBrowserFactory|null,mainMenu: IMainMenu,rendermime: IRenderMimeRegistry)/*: InstanceTracker<VoyagerPanel>*/{
+function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker_Notebook: NotebookTracker,palette: ICommandPalette, docManager: IDocumentManager, browserFactory: IFileBrowserFactory|null,mainMenu: IMainMenu,rendermime: IRenderMimeRegistry)/*: InstanceTracker<VoyagerPanel>*/{
 
   //let wdg:VoyagerPanel_DF;
   // Declare a widget variable
@@ -177,7 +178,7 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
 
   // Get the current cellar widget and activate unless the args specify otherwise.
   function getCurrent(args: ReadonlyJSONObject): NotebookPanel | null {
-    const widget = tracker.currentWidget;
+    const widget = tracker_Notebook.currentWidget;
     const activate = args['activate'] !== false;     
     if (activate && widget) {
       app.shell.activateById(widget.id);
@@ -481,7 +482,7 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
           var datavoyager = (widget as VoyagerPanel|VoyagerPanel_DF).voyager_cur;
           var dataSrc = (widget as VoyagerPanel|VoyagerPanel_DF).data_src;
           let spec = datavoyager.getSpec(false);
-          console.log(spec)
+          console.log(spec);
           let src =JSON.stringify({
             "data":dataSrc, 
             "mark": spec.mark, 
@@ -883,33 +884,31 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
     extensions: ['.txt']
   });
 
-  //fileTypes.map(ft => {
-    //const factoryName = `Voyager (${ft})`;
-    const factoryName = `Voyager`;
-    const tracker1 = new InstanceTracker<VoyagerPanel>({ namespace: factoryName });  
-    const factory = new VoyagerWidgetFactory(
+    const factoryName1 = `Voyager`;
+    const tracker1 = new InstanceTracker<VoyagerPanel>({ namespace: factoryName1});  
+    const factory1 = new VoyagerWidgetFactory(
       docManager,
       {
-        name: factoryName,
-        fileTypes: ['csv', 'json', 'tsv', 'txt'],
+        name: factoryName1,
+        fileTypes: ['csv', 'json', 'tsv', 'txt','vega-lite2','vega3'],
         readOnly: true
       }
     );
     // Handle state restoration.
-    
     restorer.restore(tracker1, {
       command: 'docmanager:open',
-      args: widget => ({ path: widget.context.path, factory: factoryName }),
+      args: widget => ({ path: widget.context.path, factory: factoryName1 }),
       name: widget => widget.context.path
     });
 
-    app.docRegistry.addWidgetFactory(factory);
+    app.docRegistry.addWidgetFactory(factory1);
 
-    factory.widgetCreated.connect((sender, widget) => {
+    factory1.widgetCreated.connect((sender, widget) => {
       // Track the widget.
-      tracker1.add(widget);
+      widget.id = widget.id;
+      widget.title.icon = VOYAGER_ICON;
       widget.context.pathChanged.connect(()=>{tracker1.save(widget);});
-      widget.title.iconClass = VOYAGER_ICON;
+      tracker1.add(widget);
     });
 
     fileTypes.map(ft => {
@@ -921,11 +920,6 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
         console.log("app docreg getfile type: "+ftObj.name);
       }
     })
-    
-
-    
-
-/*
   
     const factoryName2 = `Vegalite in New Notebook`;
     const tracker2 = new InstanceTracker<NotebookPanel>({ namespace: factoryName2 });  
@@ -941,15 +935,15 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
     
     restorer.restore(tracker2, {
       command: 'docmanager:open',
-      args: widget => ({ path: widget.context.path, factory: factoryName }),
+      args: widget => ({ path: widget.context.path, factory: factoryName2 }),
       name: widget => widget.context.path
     });
 
     app.docRegistry.addWidgetFactory(factory2);
-    factory.widgetCreated.connect((sender, widget) => {
+    factory2.widgetCreated.connect((sender, widget) => {
       // Track the widget.
-      tracker1.add(widget);
-      widget.context.pathChanged.connect(()=>{tracker1.save(widget);});
+      tracker2.add(widget);
+      widget.context.pathChanged.connect(()=>{tracker2.save(widget);});
       widget.title.iconClass = VOYAGER_ICON;
     });
 
@@ -963,7 +957,7 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker: NotebookT
       console.log("app docreg getfile type: "+ftObj.name);
     }
    })
-   */
+   
 }
 
 //const plugin: JupyterLabPlugin<InstanceTracker<VoyagerPanel>> = {

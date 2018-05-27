@@ -3,7 +3,7 @@
 import path = require('path');
 
 import {
-  ActivityMonitor, PathExt
+  ActivityMonitor, PathExt,ISettingRegistry
 } from '@jupyterlab/coreutils';
 
 import {
@@ -26,6 +26,10 @@ import {
 import {
   IDocumentManager
 } from '@jupyterlab/docmanager';
+
+import {
+  ISignal, Signal
+} from '@phosphor/signaling';
 
 import { CreateVoyager, Voyager } from 'datavoyager/build/lib-voyager';
 import { VoyagerConfig } from 'datavoyager/build/models/config';
@@ -223,7 +227,8 @@ class VoyagerPanel extends Widget implements DocumentRegistry.IReadyWidget {
     context.pathChanged.connect(this._onPathChanged, this);
     this._onPathChanged();
 
-    let layout = this.layout = new BoxLayout();
+    let layout = this.layout = new BoxLayout({spacing: 0});
+    layout.direction = 'top-to-bottom';
 
     this.voyager_widget = new Widget();
 
@@ -320,17 +325,14 @@ class VoyagerPanel extends Widget implements DocumentRegistry.IReadyWidget {
     this.toolbar = new Toolbar();
     this.toolbar.addClass(VOYAGER_PANEL_TOOLBAR_CLASS);
     this.toolbar.addItem('save', createSaveButton(this));
-    //this.toolbar.addItem('saveAs', createExportButton(this));
+    this.toolbar.addItem('saveAs', createExportButton(this));
     this.toolbar.addItem('undo', createUndoButton(this));
     this.toolbar.addItem('redo', createRedoButton(this));
    // this.toolbar.addItem('Bookmarks', createBookMarkButton(this));
-
-    layout.addWidget(this.toolbar);
-    layout.addWidget(this.voyager_widget);
-
     BoxLayout.setStretch(this.toolbar, 0);
     BoxLayout.setStretch(this.voyager_widget, 1);
-
+    layout.addWidget(this.toolbar);
+    layout.addWidget(this.voyager_widget);
     this.toolbar.hide();
   }
 
@@ -362,6 +364,44 @@ class VoyagerPanel extends Widget implements DocumentRegistry.IReadyWidget {
   }
 
   /**
+   * Tests whether the settings have been modified and need saving.
+
+  get isDirty(): boolean {
+    if(this._context.path.indexOf('vl.json')!==-1){
+      return true;
+    }
+    else{
+      return false;
+    }
+  }*/
+
+  /**
+   * The plugin settings.
+   */
+  get settings(): ISettingRegistry.ISettings | null {
+    return this._settings;
+  }
+  set settings(settings: ISettingRegistry.ISettings | null) {
+    if (this._settings) {
+      this._settings.changed.disconnect(this._onSettingsChanged, this);
+    }
+    this._settings = settings;
+    if (this._settings) {
+      this._settings.changed.connect(this._onSettingsChanged, this);
+    }
+    this.update();
+  }
+    /**
+   * Handle setting changes.
+   */
+  private _onSettingsChanged(): void {
+    this.update();
+  }
+
+  private _settings: ISettingRegistry.ISettings | null = null;
+
+
+  /**
    * A promise that resolves when the file editor is ready.
    */
   get ready(): Promise<void> {
@@ -383,6 +423,34 @@ class VoyagerPanel extends Widget implements DocumentRegistry.IReadyWidget {
   }
 
     /**
+   * If the editor is in a dirty state, confirm that the user wants to leave.
+   
+  confirm(): Promise<void> {
+    if (this.isHidden || !this.isAttached || !this.isDirty) {
+      return Promise.resolve(undefined);
+    }
+
+    return showDialog({
+      title: 'You have unsaved changes.',
+      body: 'Do you want to leave without saving?',
+      buttons: [Dialog.cancelButton(), Dialog.okButton()]
+    }).then(result => {
+      if (!result.button.accept) {
+        throw new Error('User cancelled.');
+      }
+    });
+  }*/
+
+
+
+  /**
+   * A signal that emits when editor layout state changes and needs to be saved.
+   */
+  get stateChanged(): ISignal<this, void> {
+    return this._stateChanged;
+  }
+
+    /**
    * Handle `'activate-request'` messages.
    */
   protected onActivateRequest(msg: Message): void {
@@ -393,6 +461,7 @@ class VoyagerPanel extends Widget implements DocumentRegistry.IReadyWidget {
   protected _context: DocumentRegistry.Context;
   private _ready = new PromiseDelegate<void>();
   private _monitor: ActivityMonitor<any, any> | null = null;
+  private _stateChanged = new Signal<this, void>(this);
   
 }
 
@@ -423,7 +492,8 @@ class VoyagerPanel_DF extends Widget implements DocumentRegistry.IReadyWidget {
     this.addClass(Voyager_CLASS);
     this._context = context;
 
-    let layout = this.layout = new BoxLayout();
+    let layout = this.layout = new BoxLayout({spacing: 0});
+    layout.direction = 'top-to-bottom';
 
     this.voyager_widget = new Widget();
     this._context.ready.then(_ => {
@@ -484,17 +554,14 @@ class VoyagerPanel_DF extends Widget implements DocumentRegistry.IReadyWidget {
     this.toolbar = new Toolbar();
     this.toolbar.addClass(VOYAGER_PANEL_TOOLBAR_CLASS);
     this.toolbar.addItem('save', createSaveButton(this));
-    //this.toolbar.addItem('saveAs', createExportButton(this));
+    this.toolbar.addItem('saveAs', createExportButton(this));
     this.toolbar.addItem('undo', createUndoButton(this));
     this.toolbar.addItem('redo', createRedoButton(this));
    // this.toolbar.addItem('Bookmarks', createBookMarkButton(this));
-
-    layout.addWidget(this.toolbar);
-    layout.addWidget(this.voyager_widget);
-
     BoxLayout.setStretch(this.toolbar, 0);
     BoxLayout.setStretch(this.voyager_widget, 1);
-
+    layout.addWidget(this.toolbar);
+    layout.addWidget(this.voyager_widget);
     this.toolbar.hide();
 
 
