@@ -92,6 +92,17 @@
   background-image: var(--jp-Export-icon);
 }
 
+.jp-ExportToNotebookIcon{
+  min-width: 16px;
+  min-height: 16px;
+  background-size: 16px;
+  display: inline-block;
+  vertical-align: middle;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-image: var(--jp-ExportToNotebook-icon);
+}
+
 .jp-UndoIcon{
   min-width: 16px;
   min-height: 16px;

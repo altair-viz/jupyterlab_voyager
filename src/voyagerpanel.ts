@@ -3,11 +3,11 @@
 import path = require('path');
 
 import {
-  ActivityMonitor, PathExt,ISettingRegistry
+  ActivityMonitor, PathExt,ISettingRegistry,nbformat
 } from '@jupyterlab/coreutils';
 
 import {
-  Toolbar,ToolbarButton, Dialog, showDialog
+  Toolbar,ToolbarButton, Dialog, showDialog,showErrorMessage
 } from '@jupyterlab/apputils';
 
 import {
@@ -16,7 +16,7 @@ import {
 } from '@jupyterlab/docregistry';
 
 import {
-  Widget, BoxLayout //, Menu
+  Widget, BoxLayout
 } from '@phosphor/widgets';
 
 import {
@@ -24,8 +24,12 @@ import {
 } from '@phosphor/messaging';
 
 import {
-  IDocumentManager
+  IDocumentManager, DocumentManager
 } from '@jupyterlab/docmanager';
+
+import {
+  NotebookPanel,NotebookModel,NotebookActions
+} from '@jupyterlab/notebook';
 
 import {
   ISignal, Signal
@@ -41,6 +45,7 @@ import {
 } from '@phosphor/coreutils';
 
 import '../style/index.css';
+import { JupyterLab } from '@jupyterlab/application';
 //import { CommandRegistry } from '@phosphor/commands';
 //import { Contents } from '@jupyterlab/services';
 
@@ -56,6 +61,11 @@ const TOOLBAR_SAVE_CLASS = 'jp-SaveIcon';
 const TOOLBAR_EXPORT_CLASS = 'jp-ExportIcon';
 
 /**
+ * The class name added to toolbar insert button.
+ */
+const TOOLBAR_EXPORTTONOTEBOOK_CLASS = 'jp-ExportToNotebookIcon';
+
+/**
  * The class name added to toolbar cut button.
  */
 const TOOLBAR_UNDO_CLASS = 'jp-UndoIcon';
@@ -69,7 +79,6 @@ const TOOLBAR_REDO_CLASS = 'jp-RedoIcon';
  * The class name added to a datavoyager widget.
  */
 const Voyager_CLASS = 'jp-Voyager';
-
 
 export
 function createSaveButton(widget: VoyagerPanel|VoyagerPanel_DF): ToolbarButton {
@@ -98,17 +107,17 @@ function createSaveButton(widget: VoyagerPanel|VoyagerPanel_DF): ToolbarButton {
       else{
         showDialog({
           title: "Warning",
-          body: "File must end in vl.json to save, use 'Export' instead",
+          body: "To save this chart, you will need to export it to a Vega-Lite file (.vl.json)",
           buttons: [Dialog.warnButton({ label: "OK"})]
         })
       }
     },
-    tooltip: 'Save the current voyager contents',    
+    tooltip: 'Save Voyager',    
   });
 }
 
 export
-function createExportButton(widget: VoyagerPanel|VoyagerPanel_DF): ToolbarButton {
+function createExportButton(widget: VoyagerPanel|VoyagerPanel_DF, app:JupyterLab,docManager:DocumentManager): ToolbarButton {
   return new ToolbarButton({
     className: TOOLBAR_EXPORT_CLASS,
     onClick: () => {
@@ -118,24 +127,132 @@ function createExportButton(widget: VoyagerPanel|VoyagerPanel_DF): ToolbarButton
       let spec = datavoyager.getSpec(false);
       //let context = docManager.contextForWidget(widget) as Context<DocumentRegistry.IModel>;
       let context = widget.context as Context<DocumentRegistry.IModel>;
-      context.model.fromJSON({
-        "data":dataSrc, 
-        "mark": spec.mark, 
-        "encoding": spec.encoding, 
-        "height":spec.height, 
-        "width":spec.width, 
-        "description":spec.description,
-        "name":spec.name,
-        "selection":spec.selection,
-        "title":spec.title,
-        "transform":spec.transform
-      });
-      //context.model.fromJSON(spec);
-      context.saveAs();
+      let path = PathExt.dirname(context.path);
+      var content:any;
+      if(spec!==undefined){
+        content = {
+          "data":dataSrc, 
+          "mark": spec.mark, 
+          "encoding": spec.encoding, 
+          "height":spec.height, 
+          "width":spec.width, 
+          "description":spec.description,
+          "name":spec.name,
+          "selection":spec.selection,
+          "title":spec.title,
+          "transform":spec.transform
+          };   
+      }
+      else{
+        content ={
+          "data":dataSrc, 
+          };  
+      }
+      let input_block = document.createElement("div");
+      let input_prompt = document.createElement("div");
+      input_prompt.textContent = '';
+      let input = document.createElement("input");
+      input_block.appendChild(input_prompt);
+      input_block.appendChild(input);
+      let bd = new Widget({node:input_block});
+      showDialog({
+        title: "Export as Vega-Lite File (.vl.json)",
+        body: bd,
+        buttons: [Dialog.cancelButton(), Dialog.okButton({ label: "OK"})]
+      }).then(result=>{
+        let msg = input.value;
+        if(result.button.accept){
+          if(!isValidFileName(msg)){
+            showErrorMessage('Name Error', Error(
+              `"${result.value}" is not a valid name for a file. ` +
+              `Names must have nonzero length, ` +
+              `and cannot include "/", "\\", or ":"`
+          ));
+          }
+          else{
+            let basePath = path;
+            let newPath = PathExt.join(basePath, msg.indexOf('.vl.json')!==-1?msg:msg+'.vl.json');
+              app.commands.execute('docmanager:new-untitled', {
+              path: basePath, ext: '.vl.json', type: 'file'
+            }).then(model => {
+              docManager.rename(model.path, newPath).then(model=>{
+                app.commands.execute('docmanager:open', {
+                path: model.path, factory: "Editor"
+              }).then(widget=>{
+                let context = docManager.contextForWidget(widget);
+                if(context!=undefined){
+                  context.save().then(()=>{
+                    if(context!=undefined){
+                      context.model.fromJSON(content);
+                      context.save()    
+                    }
+                  })
+                }})
+              })
+            });
+          }}
+      })
     },
-    tooltip: 'Export the current voyager contents to a vl.json file'
+    tooltip: 'Export Voyager to a vl.json file'
   });
 }
+
+export
+function createExportToNotebookButton(widget: VoyagerPanel|VoyagerPanel_DF, app:JupyterLab,docManager:DocumentManager): ToolbarButton {
+  return new ToolbarButton({
+    className: TOOLBAR_EXPORTTONOTEBOOK_CLASS,
+    onClick: () => {
+
+          var datavoyager = widget.voyager_cur;
+          var dataSrc = widget.data_src;
+          let spec = datavoyager.getSpec(false);
+          let src =JSON.stringify({
+            "data":dataSrc, 
+            "mark": spec.mark, 
+            "encoding": spec.encoding, 
+            "height":spec.height, 
+            "width":spec.width, 
+            "description":spec.description,
+            "name":spec.name,
+            "selection":spec.selection,
+            "title":spec.title,
+            "transform":spec.transform
+            });
+          let path = PathExt.dirname(widget.context.path);
+          app.commands.execute('docmanager:new-untitled', {
+            path: path, type: 'notebook', kernelPreference:{autoStartDefault:true}
+          }).then(model => {
+              app.commands.execute('docmanager:open', {
+              path: model.path, factory: 'Notebook', kernel:{name: 'Python 3'}
+            }).then(widget=>{
+              let md = (widget as NotebookPanel).notebook.model.toJSON() as nbformat.INotebookContent;
+              let model = new NotebookModel();
+              md.cells = [{
+                "cell_type": "code",
+                "execution_count": null,
+                "metadata": {},
+                "outputs": [],
+                "source": [
+                  "import altair as alt\n",
+                  "import pandas as pd\n",
+                  "import json\n",
+                  `data_src = json.loads('''${src}''')\n`,
+                  "alt.Chart.from_dict(data_src)\n",
+                ]
+               }];
+              model.fromJSON(md);
+              (widget as NotebookPanel).notebook.model = model;
+              widget.context.save().then(()=>{
+                NotebookActions.runAll(widget.notebook, widget.context.session);
+              });
+              
+            });
+          });         
+    },
+    tooltip: 'Export Voyager to Notebook'
+  });
+}
+
 
 export
 function createUndoButton(widget: VoyagerPanel|VoyagerPanel_DF): ToolbarButton {
@@ -170,6 +287,13 @@ function createBookMarkButton(widget: VoyagerPanel|VoyagerPanel_DF): ToolbarButt
   });
 }
 */
+
+export
+function isValidFileName(name: string): boolean {
+  const validNameExp = /[\/\\:]/;
+  return name.length > 0 && !validNameExp.test(name);
+}
+
 function isValidURL(str:string) {
   var a  = document.createElement('a');
   a.href = str;
@@ -217,7 +341,7 @@ class VoyagerPanel extends Widget implements DocumentRegistry.IReadyWidget {
   // So instead we just never resolve this promise, which still gives us the
   // spinner until Voyager overwrites the element.
 
-  constructor(options: VoyagerPanel.IOptions, docManager: IDocumentManager) {
+  constructor(options: VoyagerPanel.IOptions, app:JupyterLab, docManager: IDocumentManager) {
     super();
     this.addClass(Voyager_CLASS);
     const context = this._context = options.context;
@@ -225,6 +349,8 @@ class VoyagerPanel extends Widget implements DocumentRegistry.IReadyWidget {
 
     this.title.label = PathExt.basename(context.path);
     context.pathChanged.connect(this._onPathChanged, this);
+    context.model.contentChanged.connect(this.update, this);
+    context.fileChanged.connect(this.update, this);
     this._onPathChanged();
 
     let layout = this.layout = new BoxLayout({spacing: 0});
@@ -325,7 +451,8 @@ class VoyagerPanel extends Widget implements DocumentRegistry.IReadyWidget {
     this.toolbar = new Toolbar();
     this.toolbar.addClass(VOYAGER_PANEL_TOOLBAR_CLASS);
     this.toolbar.addItem('save', createSaveButton(this));
-    this.toolbar.addItem('saveAs', createExportButton(this));
+    this.toolbar.addItem('saveAs', createExportButton(this,app,docManager));
+    this.toolbar.addItem('ExportToNotebook', createExportToNotebookButton(this,app,docManager));
     this.toolbar.addItem('undo', createUndoButton(this));
     this.toolbar.addItem('redo', createRedoButton(this));
    // this.toolbar.addItem('Bookmarks', createBookMarkButton(this));
@@ -333,7 +460,7 @@ class VoyagerPanel extends Widget implements DocumentRegistry.IReadyWidget {
     BoxLayout.setStretch(this.voyager_widget, 1);
     layout.addWidget(this.toolbar);
     layout.addWidget(this.voyager_widget);
-    this.toolbar.hide();
+    //this.toolbar.hide();
   }
 
   /**
@@ -365,7 +492,7 @@ class VoyagerPanel extends Widget implements DocumentRegistry.IReadyWidget {
 
   /**
    * Tests whether the settings have been modified and need saving.
-
+   */
   get isDirty(): boolean {
     if(this._context.path.indexOf('vl.json')!==-1){
       return true;
@@ -373,7 +500,7 @@ class VoyagerPanel extends Widget implements DocumentRegistry.IReadyWidget {
     else{
       return false;
     }
-  }*/
+  }
 
   /**
    * The plugin settings.
@@ -487,7 +614,7 @@ class VoyagerPanel_DF extends Widget implements DocumentRegistry.IReadyWidget {
   private _ready = new PromiseDelegate<void>();
   private _monitor: ActivityMonitor<any, any> | null = null;
 
-  constructor(data: any, fileName: string, context:Context<DocumentRegistry.IModel>, isTable:boolean,docManager: IDocumentManager) {
+  constructor(data: any, fileName: string, context:Context<DocumentRegistry.IModel>, isTable:boolean,app:JupyterLab, docManager: IDocumentManager) {
     super();
     this.addClass(Voyager_CLASS);
     this._context = context;
@@ -554,7 +681,8 @@ class VoyagerPanel_DF extends Widget implements DocumentRegistry.IReadyWidget {
     this.toolbar = new Toolbar();
     this.toolbar.addClass(VOYAGER_PANEL_TOOLBAR_CLASS);
     this.toolbar.addItem('save', createSaveButton(this));
-    this.toolbar.addItem('saveAs', createExportButton(this));
+    this.toolbar.addItem('saveAs', createExportButton(this,app,docManager));
+    this.toolbar.addItem('ExportToNotebook', createExportToNotebookButton(this,app,docManager));
     this.toolbar.addItem('undo', createUndoButton(this));
     this.toolbar.addItem('redo', createRedoButton(this));
    // this.toolbar.addItem('Bookmarks', createBookMarkButton(this));
@@ -562,7 +690,7 @@ class VoyagerPanel_DF extends Widget implements DocumentRegistry.IReadyWidget {
     BoxLayout.setStretch(this.voyager_widget, 1);
     layout.addWidget(this.toolbar);
     layout.addWidget(this.voyager_widget);
-    this.toolbar.hide();
+    //this.toolbar.hide();
 
 
   }
