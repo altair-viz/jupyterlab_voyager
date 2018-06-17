@@ -3,11 +3,11 @@
 import path = require('path');
 
 import {
-  ActivityMonitor, PathExt,ISettingRegistry,nbformat
+  ActivityMonitor, PathExt,ISettingRegistry//,nbformat
 } from '@jupyterlab/coreutils';
 
 import {
-  Toolbar,ToolbarButton, Dialog, showDialog,showErrorMessage
+  Toolbar,ToolbarButton, Clipboard, Dialog, showDialog,showErrorMessage
 } from '@jupyterlab/apputils';
 
 import {
@@ -26,11 +26,11 @@ import {
 import {
   IDocumentManager, DocumentManager
 } from '@jupyterlab/docmanager';
-
+/*
 import {
   NotebookPanel,NotebookModel,NotebookActions
 } from '@jupyterlab/notebook';
-
+*/
 import {
   ISignal, Signal
 } from '@phosphor/signaling';
@@ -48,6 +48,11 @@ import '../style/index.css';
 import { JupyterLab } from '@jupyterlab/application';
 //import { CommandRegistry } from '@phosphor/commands';
 //import { Contents } from '@jupyterlab/services';
+/**
+ * The mimetype used for Jupyter cell data.
+ */
+const JUPYTER_CELL_MIME = 'application/vnd.jupyter.cells';
+
 
 const VOYAGER_PANEL_TOOLBAR_CLASS = 'jp-VoyagerPanel-toolbar';
 /**
@@ -63,7 +68,7 @@ const TOOLBAR_EXPORT_CLASS = 'jp-ExportIcon';
 /**
  * The class name added to toolbar insert button.
  */
-const TOOLBAR_EXPORTTONOTEBOOK_CLASS = 'jp-ExportToNotebookIcon';
+const TOOLBAR_COPY_CLASS = 'jp-CopyIcon';
 
 /**
  * The class name added to toolbar cut button.
@@ -106,8 +111,8 @@ function createSaveButton(widget: VoyagerPanel|VoyagerPanel_DF): ToolbarButton {
       }
       else{
         showDialog({
-          title: "Warning",
-          body: "To save this chart, you will need to export it to a Vega-Lite file (.vl.json)",
+          title: "Source File Type is NOT Vega-Lite (.vl.json)",
+          body: "To save this chart, use 'Export Voyager as Vega-Lite file' ",
           buttons: [Dialog.warnButton({ label: "OK"})]
         })
       }
@@ -193,14 +198,14 @@ function createExportButton(widget: VoyagerPanel|VoyagerPanel_DF, app:JupyterLab
           }}
       })
     },
-    tooltip: 'Export Voyager to a vl.json file'
+    tooltip: 'Export Voyager as Vega-Lite File'
   });
 }
 
 export
-function createExportToNotebookButton(widget: VoyagerPanel|VoyagerPanel_DF, app:JupyterLab,docManager:DocumentManager): ToolbarButton {
+function createCopyButton(widget: VoyagerPanel|VoyagerPanel_DF, app:JupyterLab,docManager:DocumentManager): ToolbarButton {
   return new ToolbarButton({
-    className: TOOLBAR_EXPORTTONOTEBOOK_CLASS,
+    className: TOOLBAR_COPY_CLASS,
     onClick: () => {
 
           var datavoyager = widget.voyager_cur;
@@ -217,7 +222,24 @@ function createExportToNotebookButton(widget: VoyagerPanel|VoyagerPanel_DF, app:
             "selection":spec.selection,
             "title":spec.title,
             "transform":spec.transform
-            });
+          });
+          let clipboard = Clipboard.getInstance();
+          clipboard.clear();
+          let data = [{
+            "cell_type": "code",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+              "import altair as alt\n",
+              "import pandas as pd\n",
+              "import json\n",
+              `data_src = json.loads('''${src}''')\n`,
+              "alt.Chart.from_dict(data_src)\n",
+            ]
+           }]
+          clipboard.setData(JUPYTER_CELL_MIME, data);
+          /*
           let path = PathExt.dirname(widget.context.path);
           app.commands.execute('docmanager:new-untitled', {
             path: path, type: 'notebook', kernelPreference:{autoStartDefault:true}
@@ -247,9 +269,10 @@ function createExportToNotebookButton(widget: VoyagerPanel|VoyagerPanel_DF, app:
               });
               
             });
-          });         
+          }); 
+          */        
     },
-    tooltip: 'Export Voyager to Notebook'
+    tooltip: 'Copy Altair Graph to clipboard'
   });
 }
 
@@ -452,7 +475,7 @@ class VoyagerPanel extends Widget implements DocumentRegistry.IReadyWidget {
     this.toolbar.addClass(VOYAGER_PANEL_TOOLBAR_CLASS);
     this.toolbar.addItem('save', createSaveButton(this));
     this.toolbar.addItem('saveAs', createExportButton(this,app,docManager));
-    this.toolbar.addItem('ExportToNotebook', createExportToNotebookButton(this,app,docManager));
+    this.toolbar.addItem('ExportToNotebook', createCopyButton(this,app,docManager));
     this.toolbar.addItem('undo', createUndoButton(this));
     this.toolbar.addItem('redo', createRedoButton(this));
    // this.toolbar.addItem('Bookmarks', createBookMarkButton(this));
@@ -682,7 +705,7 @@ class VoyagerPanel_DF extends Widget implements DocumentRegistry.IReadyWidget {
     this.toolbar.addClass(VOYAGER_PANEL_TOOLBAR_CLASS);
     this.toolbar.addItem('save', createSaveButton(this));
     this.toolbar.addItem('saveAs', createExportButton(this,app,docManager));
-    this.toolbar.addItem('ExportToNotebook', createExportToNotebookButton(this,app,docManager));
+    this.toolbar.addItem('ExportToNotebook', createCopyButton(this,app,docManager));
     this.toolbar.addItem('undo', createUndoButton(this));
     this.toolbar.addItem('redo', createRedoButton(this));
    // this.toolbar.addItem('Bookmarks', createBookMarkButton(this));

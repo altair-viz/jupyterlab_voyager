@@ -1,0 +1,5 @@
+#!/bin/bash
+
+jlpm
+NODE_OPTIONS=--max-old-space-size=4096 jlpm build
+jupyter labextension install .

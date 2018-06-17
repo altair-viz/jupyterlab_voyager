@@ -70,7 +70,7 @@
   z-index: 1;
 }
 
-.jp-SaveIcon {
+.jp-MaterialIcon {
   min-width: 16px;
   min-height: 16px;
   background-size: 16px;
@@ -78,50 +78,25 @@
   vertical-align: middle;
   background-repeat: no-repeat;
   background-position: center;
-  background-image: var(--jp-Save-icon);
+}
+
+.jp-SaveIcon {
+  background-image: var(--jp-icon-save);
 }
 
 .jp-ExportIcon{
-  min-width: 16px;
-  min-height: 16px;
-  background-size: 16px;
-  display: inline-block;
-  vertical-align: middle;
-  background-repeat: no-repeat;
-  background-position: center;
   background-image: var(--jp-Export-icon);
 }
 
-.jp-ExportToNotebookIcon{
-  min-width: 16px;
-  min-height: 16px;
-  background-size: 16px;
-  display: inline-block;
-  vertical-align: middle;
-  background-repeat: no-repeat;
-  background-position: center;
-  background-image: var(--jp-ExportToNotebook-icon);
+.jp-CopyIcon{
+  background-image: var(--jp-icon-copy);
 }
 
 .jp-UndoIcon{
-  min-width: 16px;
-  min-height: 16px;
-  background-size: 16px;
-  display: inline-block;
-  vertical-align: middle;
-  background-repeat: no-repeat;
-  background-position: center;
   background-image: var(--jp-Undo-icon);
 }
 
 .jp-RedoIcon{
-  min-width: 16px;
-  min-height: 16px;
-  background-size: 16px;
-  display: inline-block;
-  vertical-align: middle;
-  background-repeat: no-repeat;
-  background-position: center;
   background-image: var(--jp-Redo-icon);
 }
 

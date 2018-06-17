@@ -10,7 +10,7 @@ import {
 } from '@jupyterlab/application';
 
 import {
-  ICommandPalette,InstanceTracker,Dialog, showDialog, showErrorMessage
+  ICommandPalette,InstanceTracker, Clipboard, Dialog, showDialog, showErrorMessage
 } from '@jupyterlab/apputils';
 
 import {
@@ -57,6 +57,11 @@ import {VoyagerPanel,VoyagerPanel_DF,isValidFileName} from './voyagerpanel'
 import '../style/index.css';
 //import { CommandRegistry } from '@phosphor/commands';
 //import { Contents } from '@jupyterlab/services';
+
+/**
+ * The mimetype used for Jupyter cell data.
+ */
+const JUPYTER_CELL_MIME = 'application/vnd.jupyter.cells';
 
 const VOYAGER_ICON = 'jp-VoyagerIcon';
 /**
@@ -470,8 +475,8 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker_Notebook: 
   });
 
   commands.addCommand(CommandIDs.JL_Voyager_Export_To_Notebook, {
-    label: 'Export Voyager to Notebook',
-    caption: 'Export the chart datasource to a new Notebook',
+    label: 'Copy Altair Graph to clipboard',
+    caption: 'Copy the Altair graph python code to clipboard',
     execute: args => {
       let widget = app.shell.currentWidget;
       if(widget){
@@ -493,7 +498,24 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker_Notebook: 
             "selection":spec.selection,
             "title":spec.title,
             "transform":spec.transform
-            });
+          });
+          let clipboard = Clipboard.getInstance();
+          clipboard.clear();
+          let data = [{
+            "cell_type": "code",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+              "import altair as alt\n",
+              "import pandas as pd\n",
+              "import json\n",
+              `data_src = json.loads('''${src}''')\n`,
+              "alt.Chart.from_dict(data_src)\n",
+            ]
+           }]
+          clipboard.setData(JUPYTER_CELL_MIME, data);
+/*
           let ll = app.shell.widgets('left');
           let fb = ll.next();
           while((fb as any).id!='filebrowser'){
@@ -528,7 +550,7 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker_Notebook: 
               });
               
             });
-          });         
+          });  */       
       }
     },
     isEnabled: () =>{      
