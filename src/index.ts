@@ -3,6 +3,7 @@
 import {
   PathExt,nbformat
 } from '@jupyterlab/coreutils';
+
 import {
   ILayoutRestorer,
   JupyterLabPlugin,
@@ -31,9 +32,9 @@ import {
   IMainMenu
 } from '@jupyterlab/mainmenu';
 
-import {
-  IDocumentManager
-} from '@jupyterlab/docmanager';
+import { IDocumentManager } from '@jupyterlab/docmanager';
+
+import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 
 import {
   IRenderMimeRegistry
@@ -44,9 +45,7 @@ import 'datavoyager/build/style.css';
 import {
   INotebookTracker, NotebookPanel, NotebookTracker, NotebookModel,NotebookActions
 } from '@jupyterlab/notebook';
-import {
-  CodeCell
-} from '@jupyterlab/cells';
+import { CodeCell, ICellModel } from '@jupyterlab/cells';
 
 import {
   ReadonlyJSONObject,JSONExt
@@ -71,6 +70,8 @@ const Voyager_CLASS = 'jp-Voyager';
 
 const SOURCE = require('../tutorial/tutorial.md');
 var temp_widget_counter = 0;
+
+const SOURCE = require('../tutorial/tutorial.md');
 
 //import { ReactChild } from 'react';
 export namespace CommandIDs {
@@ -115,8 +116,6 @@ class VoyagerWidgetFactory extends ABCWidgetFactory<VoyagerPanel, DocumentRegist
     let ft = PathExt.extname(context.localPath).substring(1)
     return new VoyagerPanel({context, fileType: ft},this.app,this.docManager);
   }
-
-
 }
 
 class VoyagerNotebookWidgetFactory extends ABCWidgetFactory<NotebookPanel, DocumentRegistry.IModel> {
@@ -129,6 +128,7 @@ class VoyagerNotebookWidgetFactory extends ABCWidgetFactory<NotebookPanel, Docum
     this.app = app;
     this.KernalName = kernelName;
   }
+
   protected createNewWidget(context: DocumentRegistry.Context):any{
     let ll = this.app.shell.widgets('left');
     let fb = ll.next();
@@ -166,9 +166,7 @@ class VoyagerNotebookWidgetFactory extends ABCWidgetFactory<NotebookPanel, Docum
       });
     });
   }
-
 }
-
 
 
 const fileTypes = ['csv', 'json', 'tsv', 'txt'];
@@ -189,7 +187,6 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker_Notebook: 
     }
     return widget;
   }
-
 
   function createNew(cwd: string, data: any, open:boolean) {
     let input_block = document.createElement("div");
@@ -245,8 +242,6 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker_Notebook: 
     })
   };
 
-
-
   commands.addCommand(CommandIDs.JL_Graph_Voyager, {
     label: 'Open Graph in Voyager',
     caption: 'Open the datasource in Voyager',
@@ -255,13 +250,14 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker_Notebook: 
       if(cur){
         var filename = cur.id+'_Voyager';
         let cell = cur.notebook.activeCell;
-        if(cell.model.type==='code'){
-          let codeCell = (cur.notebook.activeCell as CodeCell);
+        if (cell.model.type === 'code') {
+          let codeCell = cur.notebook.activeCell as CodeCell;
           let outputs = codeCell.model.outputs;
           console.log(outputs);
           let i = 0;
           //find the first altair image output of this cell,
           //(if multiple output images in one cell, currently there's no method to locate, so only select the first one by default)application/vnd.jupyter.stdout stdout doesn't have 'data' field
+
           while(i<outputs.length){ 
             if(!!outputs.get(i).data['application/vnd.vegalite.v2+json']){
               if(!!(outputs.get(i).data['application/vnd.vegalite.v2+json'] as any).vconcat){
@@ -291,7 +287,6 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker_Notebook: 
       }
     }
   });
-
 
   commands.addCommand(CommandIDs.JL_Table_Voyager, {
     label: 'Open table in Voyager',
@@ -348,7 +343,6 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker_Notebook: 
           }
         }
       }
-
     }
   });
 
@@ -357,7 +351,7 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker_Notebook: 
     caption: 'Save the chart datasource as vl.json file',
     execute: args => {
       let widget = app.shell.currentWidget;
-      if(widget){
+      if (widget) {
         var datavoyager = (widget as VoyagerPanel).voyager_cur;
         var dataSrc = (widget as VoyagerPanel).data_src;
         //let aps = datavoyager.getApplicationState();
@@ -413,10 +407,13 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker_Notebook: 
     },
     isEnabled: () =>{     
       let widget = app.shell.currentWidget;
-      if(widget&&widget.hasClass(Voyager_CLASS)&&(widget as VoyagerPanel).context.path.indexOf('vl.json')!==-1){
+      if (
+        widget &&
+        widget.hasClass(Voyager_CLASS) &&
+        (widget as VoyagerPanel).context.path.indexOf('vl.json') !== -1
+      ) {
         return true;
-      }
-      else{
+      } else {
         return false;
       }
     }
@@ -463,7 +460,7 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker_Notebook: 
           }
       }
     },
-    isEnabled: () =>{      
+    isEnabled: () => {
       let widget = app.shell.currentWidget;
       if(widget&&widget.hasClass(Voyager_CLASS)&&(widget as VoyagerPanel|VoyagerPanel_DF).context.path.indexOf('vl.json')===-1){
           return true;
@@ -563,7 +560,7 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker_Notebook: 
       }
     }
   });
-
+  
   commands.addCommand(CommandIDs.JL_Voyager_Open, {
     label: 'Open file in Voyager',
     caption: 'Open the selected file(s) in Voyager',
@@ -975,19 +972,17 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker_Notebook: 
 
     fileTypes_vega.map(ft => {
     let ftObj = app.docRegistry.getFileType(ft);
-    
-    if(ftObj==undefined){
-      console.log("app docreg getfile type: undefined");
-    }
-    else{
-      console.log("app docreg getfile type: "+ftObj.name);
+
+    if (ftObj == undefined) {
+      console.log('app docreg getfile type: undefined');
+    } else {
+      console.log('app docreg getfile type: ' + ftObj.name);
     }
    })
-   
 }
 
 //const plugin: JupyterLabPlugin<InstanceTracker<VoyagerPanel>> = {
-  const plugin: JupyterLabPlugin<void> = {
+const plugin: JupyterLabPlugin<void> = {
   // NPM package name : JS object name
   id: 'jupyterlab_voyager:plugin',
   autoStart: true,
@@ -995,4 +990,3 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker_Notebook: 
   activate: activate
 };
 export default plugin;
-

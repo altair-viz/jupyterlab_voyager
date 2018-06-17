@@ -24,8 +24,7 @@ class VoyagerTutorialWidget extends Widget {
     this.title.closable = true;
     this.addClass('jp-VoyagerTutorialWidget');
     let toolbar = new Widget();
-    toolbar.addClass('jp-VoyagerTutorial-toolbar');
-    
+    toolbar.addClass('jp-VoyagerTutorial-toolbar');  
     let layout = this.layout = new PanelLayout();
     layout.addWidget(toolbar);
     layout.addWidget(content);

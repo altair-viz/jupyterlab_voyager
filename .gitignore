@@ -11,3 +11,7 @@ node_modules/
 .cache
 .bash_history
 .yarnrc
+cypress/videos
+cypress/screenshots
+.Trash-0
+.vscode

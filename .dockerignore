@@ -12,3 +12,4 @@ node_modules/
 .cache
 .bash_history
 .yarnrc
+cypress/videos
