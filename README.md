@@ -28,7 +28,16 @@ CMD start.sh jupyter lab
 ```
 
 
-Then right click on any `csv` or `json` file click "Open with...", then "Voyager".
+Then right click on any `csv`, `tsv` or `json` file click "Open with...", then "Voyager".
+
+If you experience 
+```"FATAL ERROR: CALL_AND_RETRY_LAST Allocation failed - JavaScript heap out of memory"```
+error during installation, you can use 
+```bash
+- export NODE_OPTIONS=--max-old-space-size=16000
+``` 
+or just add NODE_OPTIONS=--max-old-space-size=16000 env variable when
+running jupyter lab build to solve this problem.
 
 ## Development
 
