@@ -86,15 +86,15 @@ const TOOLBAR_REDO_CLASS = 'jp-RedoIcon';
 const Voyager_CLASS = 'jp-Voyager';
 
 export
-function createSaveButton(widget: VoyagerPanel|VoyagerPanel_DF): ToolbarButton {
+function createSaveButton(widget: VoyagerPanel|VoyagerPanel_DF, app:JupyterLab,docManager:DocumentManager): ToolbarButton {
   return new ToolbarButton({
     className: TOOLBAR_SAVE_CLASS,
     onClick: () => {
+      var datavoyager = (widget as VoyagerPanel).voyager_cur;
+      var dataSrc = (widget as VoyagerPanel).data_src;
+      let spec = datavoyager.getSpec(false);
+      let context = widget.context as Context<DocumentRegistry.IModel>;
       if(widget&&widget.hasClass(Voyager_CLASS)&&(widget as VoyagerPanel).context.path.indexOf('vl.json')!==-1){
-        var datavoyager = (widget as VoyagerPanel).voyager_cur;
-        var dataSrc = (widget as VoyagerPanel).data_src;
-        let spec = datavoyager.getSpec(false);
-        let context = widget.context as Context<DocumentRegistry.IModel>;
         context.model.fromJSON({
           "data":dataSrc, 
           "mark": spec.mark, 
@@ -112,8 +112,75 @@ function createSaveButton(widget: VoyagerPanel|VoyagerPanel_DF): ToolbarButton {
       else{
         showDialog({
           title: "Source File Type is NOT Vega-Lite (.vl.json)",
-          body: "To save this chart, use 'Export Voyager as Vega-Lite file' ",
-          buttons: [Dialog.warnButton({ label: "OK"})]
+          body: "Do you want to export Voyager as Vega-Lite file to save the chart?",
+          buttons: [Dialog.cancelButton(), Dialog.warnButton({ label: "Export"})]
+        }).then(result=>{
+          if(result.button.accept){
+            let input_block = document.createElement("div");
+            let input_prompt = document.createElement("div");
+            input_prompt.textContent = '';
+            let input = document.createElement("input");
+            input_block.appendChild(input_prompt);
+            input_block.appendChild(input);
+            let bd = new Widget({node:input_block});
+            showDialog({
+              title: "Export as Vega-Lite File (.vl.json)",
+              body: bd,
+              buttons: [Dialog.cancelButton(), Dialog.okButton({ label: "OK"})]
+            }).then(result=>{
+              let msg = input.value;
+              if(result.button.accept){
+                if(!isValidFileName(msg)){
+                  showErrorMessage('Name Error', Error(
+                    `"${result.value}" is not a valid name for a file. ` +
+                    `Names must have nonzero length, ` +
+                    `and cannot include "/", "\\", or ":"`
+                ));
+                }
+                else{
+                  var content:any;
+                  if(spec!==undefined){
+                    content = {
+                      "data":dataSrc, 
+                      "mark": spec.mark, 
+                      "encoding": spec.encoding, 
+                      "height":spec.height, 
+                      "width":spec.width, 
+                      "description":spec.description,
+                      "name":spec.name,
+                      "selection":spec.selection,
+                      "title":spec.title,
+                      "transform":spec.transform
+                      };   
+                  }
+                  else{
+                    content ={
+                      "data":dataSrc, 
+                      };  
+                  }
+                  let basePath = PathExt.dirname(context.path);
+                  let newPath = PathExt.join(basePath, msg.indexOf('.vl.json')!==-1?msg:msg+'.vl.json');
+                    app.commands.execute('docmanager:new-untitled', {
+                    path: basePath, ext: '.vl.json', type: 'file'
+                  }).then(model => {
+                    docManager.rename(model.path, newPath).then(model=>{
+                      app.commands.execute('docmanager:open', {
+                      path: model.path, factory: "Editor"
+                    }).then(widget=>{
+                      let context = docManager.contextForWidget(widget);
+                      if(context!=undefined){
+                        context.save().then(()=>{
+                          if(context!=undefined){
+                            context.model.fromJSON(content);
+                            context.save()    
+                          }
+                        })
+                      }})
+                    })
+                  });
+                }}
+            })
+          }
         })
       }
     },
@@ -473,7 +540,7 @@ class VoyagerPanel extends Widget implements DocumentRegistry.IReadyWidget {
     // Toolbar
     this.toolbar = new Toolbar();
     this.toolbar.addClass(VOYAGER_PANEL_TOOLBAR_CLASS);
-    this.toolbar.addItem('save', createSaveButton(this));
+    this.toolbar.addItem('save', createSaveButton(this,app,docManager));
     this.toolbar.addItem('saveAs', createExportButton(this,app,docManager));
     this.toolbar.addItem('ExportToNotebook', createCopyButton(this,app,docManager));
     this.toolbar.addItem('undo', createUndoButton(this));
@@ -703,7 +770,7 @@ class VoyagerPanel_DF extends Widget implements DocumentRegistry.IReadyWidget {
     // Toolbar
     this.toolbar = new Toolbar();
     this.toolbar.addClass(VOYAGER_PANEL_TOOLBAR_CLASS);
-    this.toolbar.addItem('save', createSaveButton(this));
+    this.toolbar.addItem('save', createSaveButton(this,app,docManager));
     this.toolbar.addItem('saveAs', createExportButton(this,app,docManager));
     this.toolbar.addItem('ExportToNotebook', createCopyButton(this,app,docManager));
     this.toolbar.addItem('undo', createUndoButton(this));

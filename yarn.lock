@@ -75,7 +75,6 @@
     react "~16.2.0"
     react-dom "~16.2.0"
 
-
 "@jupyterlab/codemirror@^0.16.3":
   version "0.16.3"
   resolved "https://registry.yarnpkg.com/@jupyterlab/codemirror/-/codemirror-0.16.3.tgz#50a05d4663478b8b41587c7bea7c8c9b2431e2c7"
@@ -157,7 +156,6 @@
     "@phosphor/messaging" "^1.2.2"
     "@phosphor/signaling" "^1.2.2"
     "@phosphor/widgets" "^1.5.0"
-
 
 "@jupyterlab/filebrowser@^0.16.3":
   version "0.16.3"
@@ -246,7 +244,7 @@
   dependencies:
     "@phosphor/coreutils" "^1.3.0"
     "@phosphor/widgets" "^1.5.0"
-    
+
 "@jupyterlab/rendermime@^0.16.3":
   version "0.16.3"
   resolved "https://registry.yarnpkg.com/@jupyterlab/rendermime/-/rendermime-0.16.3.tgz#790949413358b6b148c48993747106c31de8de07"
@@ -276,15 +274,6 @@
     "@phosphor/signaling" "^1.2.2"
     node-fetch "~1.7.3"
     ws "~1.1.4"
-
-"@jupyterlab/vega3-extension@^0.15.1":
-  version "0.15.2"
-  resolved "https://registry.yarnpkg.com/@jupyterlab/vega3-extension/-/vega3-extension-0.15.2.tgz#a35e43cde38d7d801d00399a62b1bed4e45fa926"
-  dependencies:
-    "@jupyterlab/rendermime-interfaces" "^1.0.9"
-    "@phosphor/coreutils" "^1.3.0"
-    "@phosphor/widgets" "^1.5.0"
-    vega-embed "^3.1.1"
 
 "@phosphor/algorithm@^1.1.2":
   version "1.1.2"
@@ -555,7 +544,6 @@ ajv@^6.1.0:
     fast-json-stable-stringify "^2.0.0"
     json-schema-traverse "^0.3.0"
     uri-js "^4.2.1"
-
 
 ajv@~5.1.6:
   version "5.1.6"
@@ -911,7 +899,6 @@ builtin-status-codes@^3.0.0:
   version "3.0.0"
   resolved "https://registry.yarnpkg.com/builtin-status-codes/-/builtin-status-codes-3.0.0.tgz#85982878e21b98e1c66425e03d0174788f569ee8"
 
-
 cacache@^10.0.4:
   version "10.0.4"
   resolved "https://registry.yarnpkg.com/cacache/-/cacache-10.0.4.tgz#6452367999eff9d4188aefd9a14e9d7c6a263460"
@@ -976,7 +963,6 @@ caniuse-db@^1.0.30000529, caniuse-db@^1.0.30000634, caniuse-db@^1.0.30000639:
   version "1.0.30000846"
   resolved "https://registry.yarnpkg.com/caniuse-db/-/caniuse-db-1.0.30000846.tgz#d9c86f914738db4da098eeded997413c44561bd2"
 
-
 canvas-prebuilt@^1.6, canvas-prebuilt@^1.6.0:
   version "1.6.0"
   resolved "https://registry.yarnpkg.com/canvas-prebuilt/-/canvas-prebuilt-1.6.0.tgz#f8dd9abe81fdc2103a39d8362df3219d6d83f788"
@@ -988,7 +974,6 @@ canvas@^1.6, canvas@^1.6.0, canvas@^1.6.10:
   resolved "https://registry.yarnpkg.com/canvas/-/canvas-1.6.11.tgz#c2d8bcf283281f19ded14fa163a111804522330d"
   dependencies:
     nan "^2.10.0"
-
 
 caseless@~0.11.0:
   version "0.11.0"
@@ -1041,7 +1026,6 @@ chownr@^1.0.1:
 chrome-trace-event@^0.1.1:
   version "0.1.3"
   resolved "https://registry.yarnpkg.com/chrome-trace-event/-/chrome-trace-event-0.1.3.tgz#d395af2d31c87b90a716c831fe326f69768ec084"
-
 
 cipher-base@^1.0.0, cipher-base@^1.0.1, cipher-base@^1.0.3:
   version "1.0.4"
@@ -1492,18 +1476,15 @@ d3-format@0.4:
   version "0.4.2"
   resolved "https://registry.yarnpkg.com/d3-format/-/d3-format-0.4.2.tgz#aa759c1e5aae5fa8dabc9ab7819c502fc6b56875"
 
-
 d3-format@1, d3-format@^1.2.0, d3-format@^1.2.2, d3-format@^1.3.0:
   version "1.3.0"
   resolved "https://registry.yarnpkg.com/d3-format/-/d3-format-1.3.0.tgz#a3ac44269a2011cdb87c7b5693040c18cddfff11"
-
 
 d3-geo-projection@0.2:
   version "0.2.16"
   resolved "https://registry.yarnpkg.com/d3-geo-projection/-/d3-geo-projection-0.2.16.tgz#4994ecd1033ddb1533b6c4c5528a1c81dcc29427"
   dependencies:
     brfs "^1.3.0"
-
 
 d3-geo@1, d3-geo@^1.10.0:
   version "1.10.0"
@@ -1563,7 +1544,6 @@ d3-scale@^2.0.0:
     d3-interpolate "1"
     d3-time "1"
     d3-time-format "2"
-
 
 d3-selection@^1.1.0:
   version "1.3.0"
@@ -1701,29 +1681,6 @@ deep-diff@^0.3.5:
 deep-extend@^0.5.1:
   version "0.5.1"
   resolved "https://registry.yarnpkg.com/deep-extend/-/deep-extend-0.5.1.tgz#b894a9dd90d3023fbf1c55a394fb858eb2066f1f"
-
-deep-is@~0.1.3:
-  version "0.1.3"
-  resolved "https://registry.yarnpkg.com/deep-is/-/deep-is-0.1.3.tgz#b369d6fb5dbc13eecf524f91b070feedc357cf34"
-
-define-property@^0.2.5:
-  version "0.2.5"
-  resolved "https://registry.yarnpkg.com/define-property/-/define-property-0.2.5.tgz#c35b1ef918ec3c990f9a5bc57be04aacec5c8116"
-  dependencies:
-    is-descriptor "^0.1.0"
-
-define-property@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/define-property/-/define-property-1.0.0.tgz#769ebaaf3f4a63aad3af9e8d304c9bbe79bfb0e6"
-  dependencies:
-    is-descriptor "^1.0.0"
-
-define-property@^2.0.2:
-  version "2.0.2"
-  resolved "https://registry.yarnpkg.com/define-property/-/define-property-2.0.2.tgz#d459689e8d654ba77e02a817f8710d702cb16e9d"
-  dependencies:
-    is-descriptor "^1.0.2"
-    isobject "^3.0.1"
 
 deep-is@~0.1.3:
   version "0.1.3"
@@ -1909,7 +1866,6 @@ error-ex@^1.2.0:
   dependencies:
     is-arrayish "^0.2.1"
 
-
 escape-string-regexp@^1.0.2, escape-string-regexp@^1.0.5:
   version "1.0.5"
   resolved "https://registry.yarnpkg.com/escape-string-regexp/-/escape-string-regexp-1.0.5.tgz#1b61c0562190a8dff6ae3bb2cf0200ca130b86d4"
@@ -1953,7 +1909,6 @@ estraverse@^4.1.0, estraverse@^4.1.1, estraverse@^4.2.0:
 esutils@^2.0.2:
   version "2.0.2"
   resolved "https://registry.yarnpkg.com/esutils/-/esutils-2.0.2.tgz#0abf4f1caa5bcb1f7a9d8acc6dea4faaa04bac9b"
-
 
 events@^1.0.0:
   version "1.1.1"
@@ -2006,7 +1961,6 @@ extend-shallow@^2.0.1:
   dependencies:
     is-extendable "^0.1.0"
 
-
 extend-shallow@^3.0.0, extend-shallow@^3.0.2:
   version "3.0.2"
   resolved "https://registry.yarnpkg.com/extend-shallow/-/extend-shallow-3.0.2.tgz#26a71aaf073b39fb2127172746131c2704028db8"
@@ -2055,7 +2009,6 @@ fast-deep-equal@^1.0.0:
 fast-deep-equal@^2.0.1:
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/fast-deep-equal/-/fast-deep-equal-2.0.1.tgz#7b05218ddf9667bf7f370bf7fdb2cb15fdd0aa49"
-
 
 fast-json-stable-stringify@^2.0.0:
   version "2.0.0"
@@ -2363,10 +2316,6 @@ has-ansi@^2.0.0:
 has-flag@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/has-flag/-/has-flag-1.0.0.tgz#9d9e793165ce017a00f00418c43f942a7b1d11fa"
-
-has-flag@^3.0.0:
-  version "3.0.0"
-  resolved "https://registry.yarnpkg.com/has-flag/-/has-flag-3.0.0.tgz#b5d454dc2199ae225699f3467e5a07f3b955bafd"
 
 has-flag@^3.0.0:
   version "3.0.0"
@@ -3054,16 +3003,6 @@ make-dir@^1.0.0:
   resolved "https://registry.yarnpkg.com/make-dir/-/make-dir-1.3.0.tgz#79c1033b80515bd6d24ec9933e860ca75ee27f0c"
   dependencies:
     pify "^3.0.0"
-
-map-cache@^0.2.2:
-  version "0.2.2"
-  resolved "https://registry.yarnpkg.com/map-cache/-/map-cache-0.2.2.tgz#c32abd0bd6525d9b051645bb4f26ac5dc98a0dbf"
-
-magic-string@^0.22.4:
-  version "0.22.5"
-  resolved "https://registry.yarnpkg.com/magic-string/-/magic-string-0.22.5.tgz#8e9cf5afddf44385c1da5bc2a6a0dbd10b03657e"
-  dependencies:
-    vlq "^0.2.2"
 
 map-cache@^0.2.2:
   version "0.2.2"
@@ -4664,16 +4603,6 @@ safe-regex@^1.1.0:
   version "2.1.2"
   resolved "https://registry.yarnpkg.com/safer-buffer/-/safer-buffer-2.1.2.tgz#44fa161b0187b9549dd84bb91802f9bd8385cd6a"
 
-safe-regex@^1.1.0:
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/safe-regex/-/safe-regex-1.1.0.tgz#40a3669f3b077d1e943d44629e157dd48023bf2e"
-  dependencies:
-    ret "~0.1.10"
-
-safer-buffer@^2.1.0:
-  version "2.1.2"
-  resolved "https://registry.yarnpkg.com/safer-buffer/-/safer-buffer-2.1.2.tgz#44fa161b0187b9549dd84bb91802f9bd8385cd6a"
-
 sanitize-html@~1.14.3:
   version "1.14.3"
   resolved "https://registry.yarnpkg.com/sanitize-html/-/sanitize-html-1.14.3.tgz#62afd7c2d44ffd604599121d49e25b934e7a5514"
@@ -5096,12 +5025,6 @@ supports-color@^5.3.0, supports-color@^5.4.0:
   dependencies:
     has-flag "^3.0.0"
 
-supports-color@^5.3.0:
-  version "5.4.0"
-  resolved "https://registry.yarnpkg.com/supports-color/-/supports-color-5.4.0.tgz#1c6b337402c2137605efe19f10fec390f6faab54"
-  dependencies:
-    has-flag "^3.0.0"
-
 svgo@^0.7.0:
   version "0.7.2"
   resolved "https://registry.yarnpkg.com/svgo/-/svgo-0.7.2.tgz#9f5772413952135c6fefbf40afe6a4faa88b4bb5"
@@ -5304,9 +5227,9 @@ typescript@~2.1.5:
   version "2.1.6"
   resolved "https://registry.yarnpkg.com/typescript/-/typescript-2.1.6.tgz#40c7e6e9e5da7961b7718b55505f9cac9487a607"
 
-typescript@~2.6.2:
-  version "2.6.2"
-  resolved "https://registry.yarnpkg.com/typescript/-/typescript-2.6.2.tgz#3c5b6fd7f6de0914269027f03c0946758f7673a4"
+typescript@~2.4.1:
+  version "2.4.2"
+  resolved "https://registry.yarnpkg.com/typescript/-/typescript-2.4.2.tgz#f8395f85d459276067c988aa41837a8f82870844"
 
 ua-parser-js@^0.7.9:
   version "0.7.18"
