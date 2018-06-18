@@ -36,10 +36,6 @@ import { IDocumentManager } from '@jupyterlab/docmanager';
 
 import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 
-import {
-  IRenderMimeRegistry
-} from '@jupyterlab/rendermime';
-
 import 'datavoyager/build/style.css';
 
 import {
@@ -70,8 +66,6 @@ const Voyager_CLASS = 'jp-Voyager';
 
 const SOURCE = require('../tutorial/tutorial.md');
 var temp_widget_counter = 0;
-
-const SOURCE = require('../tutorial/tutorial.md');
 
 //import { ReactChild } from 'react';
 export namespace CommandIDs {
