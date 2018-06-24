@@ -11,7 +11,12 @@ import {
 } from '@jupyterlab/application';
 
 import {
-  ICommandPalette,InstanceTracker, Clipboard, Dialog, showDialog, showErrorMessage
+  ICommandPalette,
+  InstanceTracker, 
+  Clipboard, 
+  Dialog, 
+  showDialog, 
+  showErrorMessage
 } from '@jupyterlab/apputils';
 
 import {
@@ -21,7 +26,8 @@ import {
 } from '@jupyterlab/docregistry';
 
 import {
-  IFileBrowserFactory, FileBrowser
+  IFileBrowserFactory, 
+  FileBrowser
 } from '@jupyterlab/filebrowser';
 
 import {
@@ -32,26 +38,43 @@ import {
   IMainMenu
 } from '@jupyterlab/mainmenu';
 
-import { IDocumentManager } from '@jupyterlab/docmanager';
+import { 
+  IDocumentManager 
+} from '@jupyterlab/docmanager';
 
-import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
-
-import 'datavoyager/build/style.css';
+import { 
+  IRenderMimeRegistry 
+} from '@jupyterlab/rendermime';
 
 import {
-  INotebookTracker, NotebookPanel, NotebookTracker, NotebookModel,NotebookActions
+  INotebookTracker, 
+  NotebookPanel, 
+  NotebookTracker, 
+  NotebookModel,
+  NotebookActions
 } from '@jupyterlab/notebook';
-import { CodeCell, ICellModel } from '@jupyterlab/cells';
+
+import { 
+  CodeCell
+} from '@jupyterlab/cells';
 
 import {
-  ReadonlyJSONObject,JSONExt
+  ReadonlyJSONObject,
+  JSONExt
 } from '@phosphor/coreutils';
 
-import {VoyagerTutorialWidget} from './tutorial'
-import {VoyagerPanel,VoyagerPanel_DF,isValidFileName} from './voyagerpanel'
+import {
+  VoyagerTutorialWidget
+} from './tutorial';
+
+import {
+  VoyagerPanel,
+  VoyagerPanel_DF,
+  isValidFileName
+} from './voyagerpanel';
+
 import '../style/index.css';
-//import { CommandRegistry } from '@phosphor/commands';
-//import { Contents } from '@jupyterlab/services';
+import 'datavoyager/build/style.css';
 
 /**
  * The mimetype used for Jupyter cell data.
@@ -65,6 +88,7 @@ const VOYAGER_ICON = 'jp-VoyagerIcon';
 const Voyager_CLASS = 'jp-Voyager';
 
 const SOURCE = require('../tutorial/tutorial.md');
+
 var temp_widget_counter = 0;
 
 //import { ReactChild } from 'react';
@@ -505,43 +529,7 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker_Notebook: 
               "alt.Chart.from_dict(data_src)\n",
             ]
            }]
-          clipboard.setData(JUPYTER_CELL_MIME, data);
-/*
-          let ll = app.shell.widgets('left');
-          let fb = ll.next();
-          while((fb as any).id!='filebrowser'){
-            fb = ll.next();
-          }
-          let path = (fb as any).model.path as string;
-          return commands.execute('docmanager:new-untitled', {
-            path: path, type: 'notebook', kernelPreference:{autoStartDefault:true}
-          }).then(model => {
-            return commands.execute('docmanager:open', {
-              path: model.path, factory: 'Notebook', kernel:{name: 'Python 3'}
-            }).then(widget=>{
-              let md = (widget as NotebookPanel).notebook.model.toJSON() as nbformat.INotebookContent;
-              let model = new NotebookModel();
-              md.cells = [{
-                "cell_type": "code",
-                "execution_count": null,
-                "metadata": {},
-                "outputs": [],
-                "source": [
-                  "import altair as alt\n",
-                  "import pandas as pd\n",
-                  "import json\n",
-                  `data_src = json.loads('''${src}''')\n`,
-                  "alt.Chart.from_dict(data_src)\n",
-                ]
-               }];
-              model.fromJSON(md);
-              (widget as NotebookPanel).notebook.model = model;
-              widget.context.save().then(()=>{
-                NotebookActions.runAll(widget.notebook, widget.context.session);
-              });
-              
-            });
-          });  */       
+          clipboard.setData(JUPYTER_CELL_MIME, data);     
       }
     },
     isEnabled: () =>{      
@@ -781,52 +769,11 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker_Notebook: 
       console.log('File menu save option enable: '+!!(currentWidget && docManager.contextForWidget(currentWidget)));
     },
   });
-/*
-  let menu = new Menu({commands});
-  menu.title.label = "Voyager";
-  [
-    CommandIDs.JL_Voyager_Open_In_Notebook,
-  ].forEach(command =>{
-    menu.addItem({command});
-  });
-  mainMenu.addMenu(menu,{rank:60});*/
 
   mainMenu.helpMenu.addGroup([{command:CommandIDs.JL_Voyager_Tutorial}], 0)
 
   mainMenu.fileMenu.addGroup([{command:CommandIDs.JL_Voyager_Save},{command:CommandIDs.JL_Voyager_Export}], 10)
 
-  //add phosphor context menu for voyager, for the "save", "save as", "undo", "redo" functions
-  /*
-  app.contextMenu.addItem({
-    command: CommandIDs.JL_Voyager_Undo,
-    selector: '.p-Widget.jp-Voyager.jp-Document.jp-Activity.p-DockPanel-widget',
-    rank:0
-  });
-  app.contextMenu.addItem({
-    command: CommandIDs.JL_Voyager_Redo,
-    selector: '.p-Widget.jp-Voyager.jp-Document.jp-Activity.p-DockPanel-widget',
-    rank: 1
-  });
-  app.contextMenu.addItem({
-    type: 'separator',
-    selector: '.p-Widget.jp-Voyager.jp-Document.jp-Activity.p-DockPanel-widget',
-    rank: 2
-  });
-  app.contextMenu.addItem({
-    command: CommandIDs.JL_Voyager_HideBar,
-    selector: '.p-Widget.jp-Voyager.jp-Document.jp-Activity.p-DockPanel-widget',
-    rank:3
-  });
-  app.contextMenu.addItem({
-    command: CommandIDs.JL_Voyager_Save,
-    selector: '.p-Widget.jp-Voyager.jp-Document.jp-Activity.p-DockPanel-widget',
-    rank:4
-  });
-  app.contextMenu.addItem({
-    command: CommandIDs.JL_Voyager_Export,
-    selector: '.p-Widget.jp-Voyager.jp-Document.jp-Activity.p-DockPanel-widget',
-    rank:5
-  });*/
     //add phosphor context menu for voyager_dataframe, for the "save", "save as", "undo", "redo" functions
     app.contextMenu.addItem({
       command: CommandIDs.JL_Voyager_Undo,
@@ -885,7 +832,6 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker_Notebook: 
 
   app.contextMenu.addItem({
     command: CommandIDs.JL_Table_Voyager,
-    //selector: '.p-Widget.jp-RenderedHTMLCommon.jp-RenderedHTML.jp-mod-trusted.jp-OutputArea-output'
     selector: '.dataframe'
   });
 
@@ -894,7 +840,7 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker_Notebook: 
     name: 'tsv',
     extensions: ['.tsv']
   });
-  //add txt file type to docRegistry to support "Open With ..." context menu;
+
   app.docRegistry.addFileType({
     name: 'txt',
     extensions: ['.txt']
@@ -977,7 +923,6 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker_Notebook: 
 
 //const plugin: JupyterLabPlugin<InstanceTracker<VoyagerPanel>> = {
 const plugin: JupyterLabPlugin<void> = {
-  // NPM package name : JS object name
   id: 'jupyterlab_voyager:plugin',
   autoStart: true,
   requires: [ILayoutRestorer, INotebookTracker,ICommandPalette,IDocumentManager, IFileBrowserFactory, IMainMenu, IRenderMimeRegistry],

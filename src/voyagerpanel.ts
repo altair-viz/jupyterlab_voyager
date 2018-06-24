@@ -3,11 +3,18 @@
 import path = require('path');
 
 import {
-  ActivityMonitor, PathExt,ISettingRegistry//,nbformat
+  ActivityMonitor, 
+  PathExt,
+  ISettingRegistry
 } from '@jupyterlab/coreutils';
 
 import {
-  Toolbar,ToolbarButton, Clipboard, Dialog, showDialog,showErrorMessage
+  Toolbar,
+  ToolbarButton, 
+  Clipboard, 
+  Dialog, 
+  showDialog,
+  showErrorMessage
 } from '@jupyterlab/apputils';
 
 import {
@@ -16,7 +23,8 @@ import {
 } from '@jupyterlab/docregistry';
 
 import {
-  Widget, BoxLayout
+  Widget, 
+  BoxLayout
 } from '@phosphor/widgets';
 
 import {
@@ -24,30 +32,38 @@ import {
 } from '@phosphor/messaging';
 
 import {
-  IDocumentManager, DocumentManager
+  IDocumentManager, 
+  DocumentManager
 } from '@jupyterlab/docmanager';
-/*
+
 import {
-  NotebookPanel,NotebookModel,NotebookActions
-} from '@jupyterlab/notebook';
-*/
-import {
-  ISignal, Signal
+  ISignal, 
+  Signal
 } from '@phosphor/signaling';
 
-import { CreateVoyager, Voyager } from 'datavoyager/build/lib-voyager';
-import { VoyagerConfig } from 'datavoyager/build/models/config';
+import { 
+  CreateVoyager, 
+  Voyager 
+} from 'datavoyager/build/lib-voyager';
+
+import { 
+  VoyagerConfig 
+} from 'datavoyager/build/models/config';
+
 import 'datavoyager/build/style.css';
-import { read } from 'vega-loader';
+
+import { 
+  read 
+} from 'vega-loader';
 
 import {
   PromiseDelegate
 } from '@phosphor/coreutils';
 
 import '../style/index.css';
+
 import { JupyterLab } from '@jupyterlab/application';
-//import { CommandRegistry } from '@phosphor/commands';
-//import { Contents } from '@jupyterlab/services';
+
 /**
  * The mimetype used for Jupyter cell data.
  */
@@ -305,39 +321,7 @@ function createCopyButton(widget: VoyagerPanel|VoyagerPanel_DF, app:JupyterLab,d
               "alt.Chart.from_dict(data_src)\n",
             ]
            }]
-          clipboard.setData(JUPYTER_CELL_MIME, data);
-          /*
-          let path = PathExt.dirname(widget.context.path);
-          app.commands.execute('docmanager:new-untitled', {
-            path: path, type: 'notebook', kernelPreference:{autoStartDefault:true}
-          }).then(model => {
-              app.commands.execute('docmanager:open', {
-              path: model.path, factory: 'Notebook', kernel:{name: 'Python 3'}
-            }).then(widget=>{
-              let md = (widget as NotebookPanel).notebook.model.toJSON() as nbformat.INotebookContent;
-              let model = new NotebookModel();
-              md.cells = [{
-                "cell_type": "code",
-                "execution_count": null,
-                "metadata": {},
-                "outputs": [],
-                "source": [
-                  "import altair as alt\n",
-                  "import pandas as pd\n",
-                  "import json\n",
-                  `data_src = json.loads('''${src}''')\n`,
-                  "alt.Chart.from_dict(data_src)\n",
-                ]
-               }];
-              model.fromJSON(md);
-              (widget as NotebookPanel).notebook.model = model;
-              widget.context.save().then(()=>{
-                NotebookActions.runAll(widget.notebook, widget.context.session);
-              });
-              
-            });
-          }); 
-          */        
+          clipboard.setData(JUPYTER_CELL_MIME, data);      
     },
     tooltip: 'Copy Altair Graph to clipboard'
   });
@@ -365,18 +349,6 @@ function createRedoButton(widget: VoyagerPanel|VoyagerPanel_DF): ToolbarButton {
     tooltip: 'Redo'
   });
 }
-/*
-export
-function createBookMarkButton(widget: VoyagerPanel|VoyagerPanel_DF): ToolbarButton {
-  return new ToolbarButton({
-    className: TOOLBAR_REDO_CLASS,
-    onClick: () => {
-      (widget as VoyagerPanel).voyager_cur.getBookmarkedSpecs();
-    },
-    tooltip: 'display all the bookmarks'
-  });
-}
-*/
 
 export
 function isValidFileName(name: string): boolean {
@@ -545,7 +517,6 @@ class VoyagerPanel extends Widget implements DocumentRegistry.IReadyWidget {
     this.toolbar.addItem('ExportToNotebook', createCopyButton(this,app,docManager));
     this.toolbar.addItem('undo', createUndoButton(this));
     this.toolbar.addItem('redo', createRedoButton(this));
-   // this.toolbar.addItem('Bookmarks', createBookMarkButton(this));
     BoxLayout.setStretch(this.toolbar, 0);
     BoxLayout.setStretch(this.voyager_widget, 1);
     layout.addWidget(this.toolbar);
@@ -560,7 +531,6 @@ class VoyagerPanel extends Widget implements DocumentRegistry.IReadyWidget {
     if(this._context.path.indexOf('vl.json')!==-1){
     var datavoyager = this.voyager_cur;
     var dataSrc = this.data_src;
-    //let aps = datavoyager.getApplicationState();
     let spec = datavoyager.getSpec(false);
     this._context.model.fromJSON({
       "data":dataSrc, 
@@ -575,8 +545,6 @@ class VoyagerPanel extends Widget implements DocumentRegistry.IReadyWidget {
       "transform":spec.transform
     });
     }
-    //context.model.fromJSON(spec);
-    //this._context.save();
     return this._context;
   }
 
@@ -638,27 +606,6 @@ class VoyagerPanel extends Widget implements DocumentRegistry.IReadyWidget {
     }
     super.dispose();
   }
-
-    /**
-   * If the editor is in a dirty state, confirm that the user wants to leave.
-   
-  confirm(): Promise<void> {
-    if (this.isHidden || !this.isAttached || !this.isDirty) {
-      return Promise.resolve(undefined);
-    }
-
-    return showDialog({
-      title: 'You have unsaved changes.',
-      body: 'Do you want to leave without saving?',
-      buttons: [Dialog.cancelButton(), Dialog.okButton()]
-    }).then(result => {
-      if (!result.button.accept) {
-        throw new Error('User cancelled.');
-      }
-    });
-  }*/
-
-
 
   /**
    * A signal that emits when editor layout state changes and needs to be saved.
@@ -723,11 +670,7 @@ class VoyagerPanel_DF extends Widget implements DocumentRegistry.IReadyWidget {
       this.data_src = DATA;
       console.log(data['data']);
       if(DATA['url']){ //check if it's url type datasource
-      //console.log('dataurl is: '+DATA['url'])
-      //fetch(DATA['url']).then(response => {console.log(response.json())})
-
-        if(!isValidURL(DATA['url'])){
-          
+        if(!isValidURL(DATA['url'])){      
           console.log('local url');
           let basePath = PathExt.dirname(this._context.localPath)
           console.log(basePath)
@@ -775,14 +718,10 @@ class VoyagerPanel_DF extends Widget implements DocumentRegistry.IReadyWidget {
     this.toolbar.addItem('ExportToNotebook', createCopyButton(this,app,docManager));
     this.toolbar.addItem('undo', createUndoButton(this));
     this.toolbar.addItem('redo', createRedoButton(this));
-   // this.toolbar.addItem('Bookmarks', createBookMarkButton(this));
     BoxLayout.setStretch(this.toolbar, 0);
     BoxLayout.setStretch(this.voyager_widget, 1);
     layout.addWidget(this.toolbar);
     layout.addWidget(this.voyager_widget);
-    //this.toolbar.hide();
-
-
   }
 
   get context(): DocumentRegistry.Context {
@@ -804,8 +743,6 @@ class VoyagerPanel_DF extends Widget implements DocumentRegistry.IReadyWidget {
         "transform":spec.transform
       });
       }
-      //context.model.fromJSON(spec);
-      //this._context.save();
       return this._context;
   }
   /**
@@ -814,11 +751,7 @@ class VoyagerPanel_DF extends Widget implements DocumentRegistry.IReadyWidget {
   get ready(): Promise<void> {
     return this._ready.promise;
   }
-/*
-  private _onPathChanged(): void {
-    this.title.label = PathExt.basename(this._context.localPath);
-  }
-*/
+
   /**
    * Dispose of the resources used by the widget.
    */
@@ -836,6 +769,4 @@ class VoyagerPanel_DF extends Widget implements DocumentRegistry.IReadyWidget {
     this.voyager_widget.node.tabIndex = -1;
     this.voyager_widget.node.focus();
   }
-
-
 }
