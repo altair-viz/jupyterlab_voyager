@@ -101,6 +101,9 @@ const TOOLBAR_REDO_CLASS = 'jp-RedoIcon';
  */
 const Voyager_CLASS = 'jp-Voyager';
 
+/**
+ * the function to build a 'Save' button in toolbar.
+ */
 export
 function createSaveButton(widget: VoyagerPanel|VoyagerPanel_DF, app:JupyterLab,docManager:DocumentManager): ToolbarButton {
   return new ToolbarButton({
@@ -204,6 +207,9 @@ function createSaveButton(widget: VoyagerPanel|VoyagerPanel_DF, app:JupyterLab,d
   });
 }
 
+/**
+ * the function to build an 'Export' button in toolbar.
+ */
 export
 function createExportButton(widget: VoyagerPanel|VoyagerPanel_DF, app:JupyterLab,docManager:DocumentManager): ToolbarButton {
   return new ToolbarButton({
@@ -211,9 +217,7 @@ function createExportButton(widget: VoyagerPanel|VoyagerPanel_DF, app:JupyterLab
     onClick: () => {
       var datavoyager = (widget as VoyagerPanel).voyager_cur;
       var dataSrc = (widget as VoyagerPanel).data_src;
-      //let aps = datavoyager.getApplicationState();
       let spec = datavoyager.getSpec(false);
-      //let context = docManager.contextForWidget(widget) as Context<DocumentRegistry.IModel>;
       let context = widget.context as Context<DocumentRegistry.IModel>;
       let path = PathExt.dirname(context.path);
       var content:any;
@@ -285,6 +289,9 @@ function createExportButton(widget: VoyagerPanel|VoyagerPanel_DF, app:JupyterLab
   });
 }
 
+/**
+ * the function to build a 'Copy' button (for exporting Voyager to notebook) in toolbar.
+ */
 export
 function createCopyButton(widget: VoyagerPanel|VoyagerPanel_DF, app:JupyterLab,docManager:DocumentManager): ToolbarButton {
   return new ToolbarButton({
@@ -327,7 +334,9 @@ function createCopyButton(widget: VoyagerPanel|VoyagerPanel_DF, app:JupyterLab,d
   });
 }
 
-
+/**
+ * the function to build a 'Undo' button in toolbar.
+ */
 export
 function createUndoButton(widget: VoyagerPanel|VoyagerPanel_DF): ToolbarButton {
   return new ToolbarButton({
@@ -339,6 +348,9 @@ function createUndoButton(widget: VoyagerPanel|VoyagerPanel_DF): ToolbarButton {
   });
 }
 
+/**
+ * the function to build a 'Redo' button in toolbar.
+ */
 export
 function createRedoButton(widget: VoyagerPanel|VoyagerPanel_DF): ToolbarButton {
   return new ToolbarButton({
@@ -350,12 +362,18 @@ function createRedoButton(widget: VoyagerPanel|VoyagerPanel_DF): ToolbarButton {
   });
 }
 
+/**
+ * the function to check if a file name is valid.
+ */
 export
 function isValidFileName(name: string): boolean {
   const validNameExp = /[\/\\:]/;
   return name.length > 0 && !validNameExp.test(name);
 }
 
+/**
+ * the function to check if a string is a valid web url.
+ */
 function isValidURL(str:string) {
   var a  = document.createElement('a');
   a.href = str;
@@ -415,6 +433,7 @@ class VoyagerPanel extends Widget implements DocumentRegistry.IReadyWidget {
     context.fileChanged.connect(this.update, this);
     this._onPathChanged();
 
+    //create the layout to contain toolbar and voyager interface
     let layout = this.layout = new BoxLayout({spacing: 0});
     layout.direction = 'top-to-bottom';
 
@@ -424,34 +443,23 @@ class VoyagerPanel extends Widget implements DocumentRegistry.IReadyWidget {
       this._ready.resolve(undefined);
       const data = context.model.toString();
       var values:any;
+      //read in the data
       if(this.fileType==='txt'){
         values = read(data, { type: 'json' });
       }
       else{
-        console.log(data)
         values = read(data, { type: this.fileType });
-        console.log(values)
       }
       if(this.fileType==='json'||this.fileType==='txt'){
         if(values['data']){
           var DATA = values['data'];
           this.data_src = DATA;
-          console.log(values['data']);
           if(DATA['url']){ //check if it's url type datasource
-            if(!isValidURL(DATA['url'])){
-              //console.log('data url is: '+DATA['url'])
-              //fetch(DATA['url']).then(response => {console.log(response)})
-              //console.log('local url')
-              //values['data']['url'] = '/files/'+values['data']['url']
-              //this.voyager_cur = CreateVoyager(this.voyager_widget.node, VoyagerPanel.config, values['data']);
-              
-              console.log('local url');
+            if(!isValidURL(DATA['url'])){ //check if it's local or web url
+              //local url case: have to read in the data through this url
               let basePath = PathExt.dirname(this._context.localPath)
-              console.log(basePath)
               let wholePath = path.join(basePath, DATA['url'])
-              console.log(wholePath)
               docManager.services.contents.get(wholePath).then(src=>{
-                console.log(src.content);
                 let local_filetype = PathExt.extname(DATA['url']).substring(1);
                 let local_values = read(src.content, { type: local_filetype })
                 this.voyager_cur = CreateVoyager(this.voyager_widget.node, VoyagerPanel.config, {'values':local_values});
@@ -469,7 +477,7 @@ class VoyagerPanel extends Widget implements DocumentRegistry.IReadyWidget {
               })            
             }
             else{
-              console.log('web url')
+              //web url case: can directly use web url as data source
               this.voyager_cur = CreateVoyager(this.voyager_widget.node, VoyagerPanel.config, values['data']);
             } 
           }
@@ -485,10 +493,6 @@ class VoyagerPanel extends Widget implements DocumentRegistry.IReadyWidget {
           this.voyager_cur = CreateVoyager(this.voyager_widget.node, VoyagerPanel.config, { values });
           this.data_src = {values};
         }
-        console.log('mark": '+values['mark']);
-        console.log('encoding '+values['encoding']);
-        console.log('config '+values['config']);
-        
         //update the specs if possible
         this.voyager_cur.setSpec({
             "mark": values['mark'], 
@@ -509,7 +513,7 @@ class VoyagerPanel extends Widget implements DocumentRegistry.IReadyWidget {
       }
     })
 
-    // Toolbar
+    //Create the Toolbar
     this.toolbar = new Toolbar();
     this.toolbar.addClass(VOYAGER_PANEL_TOOLBAR_CLASS);
     this.toolbar.addItem('save', createSaveButton(this,app,docManager));
@@ -517,6 +521,8 @@ class VoyagerPanel extends Widget implements DocumentRegistry.IReadyWidget {
     this.toolbar.addItem('ExportToNotebook', createCopyButton(this,app,docManager));
     this.toolbar.addItem('undo', createUndoButton(this));
     this.toolbar.addItem('redo', createRedoButton(this));
+    
+    //Add the toolbar and voyager widget to the layout panel
     BoxLayout.setStretch(this.toolbar, 0);
     BoxLayout.setStretch(this.voyager_widget, 1);
     layout.addWidget(this.toolbar);
@@ -668,25 +674,20 @@ class VoyagerPanel_DF extends Widget implements DocumentRegistry.IReadyWidget {
     else{
       var DATA = data['data'];
       this.data_src = DATA;
-      console.log(data['data']);
       if(DATA['url']){ //check if it's url type datasource
-        if(!isValidURL(DATA['url'])){      
-          console.log('local url');
+        if(!isValidURL(DATA['url'])){ //check if it's local or web url
+          //local url case     
           let basePath = PathExt.dirname(this._context.localPath)
-          console.log(basePath)
           let filePath = PathExt.basename(DATA['url'])
           let wholePath = path.join(basePath, filePath)
-          console.log(wholePath)
-
           docManager.services.contents.get(wholePath).then(src=>{
-            console.log(src.content);
             let local_filetype = PathExt.extname(DATA['url']).substring(1);
             let local_values = read(src.content, { type: local_filetype })
             this.voyager_cur = CreateVoyager(this.voyager_widget.node, VoyagerPanel.config, {'values':local_values});
           })          
         }
         else{
-          console.log('web url')
+          //web url case
           this.voyager_cur = CreateVoyager(this.voyager_widget.node, VoyagerPanel.config, data['data']);
         } 
       }
@@ -728,7 +729,6 @@ class VoyagerPanel_DF extends Widget implements DocumentRegistry.IReadyWidget {
     if(this._context.path.indexOf('vl.json')!==-1){
       var datavoyager = this.voyager_cur;
       var dataSrc = this.data_src;
-      //let aps = datavoyager.getApplicationState();
       let spec = datavoyager.getSpec(false);
       this._context.model.fromJSON({
         "data":dataSrc, 

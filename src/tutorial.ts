@@ -10,16 +10,15 @@ import {
 import '../style/index.css';
 
 /**
- * An VoyagerTutorial viewer.
+ * An VoyagerTutorial page widget.
  */
 export
 class VoyagerTutorialWidget extends Widget {
   /**
-   * Construct a new xkcd widget.
+   * Construct a new tutorial page widget.
    */
   constructor(content: Widget) {
     super();
-
     this.id = 'VoyagerTutorial-jupyterlab';
     this.title.label = 'Tutorial:JupyterLab_Voyager';
     this.title.closable = true;
