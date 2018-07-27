@@ -1,6 +1,6 @@
-FROM jupyter/minimal-notebook:281505737f8a
-RUN conda install -y -c anaconda-platform yarnpkg=0.27.5
-RUN conda install -y jupyterlab=0.28.0
+FROM jupyter/minimal-notebook:c54800018c2c
+RUN conda install -y -c anaconda-platform yarnpkg=1.3.2 && conda clean -tipsy
+
 
 
 COPY --chown=jovyan:users yarn.lock package.json ./

@@ -3,14 +3,14 @@
     "declaration": true,
     "strict": true,
     "noEmitOnError": true,
-    "noUnusedLocals": true,
+    "noUnusedLocals": false,
     "module": "commonjs",
     "moduleResolution": "node",
     "target": "ES5",
     "skipLibCheck": true,
     "outDir": "./lib",
     "lib": ["es5", "es2015.promise", "dom"],
-    "types": []
+    "types": ["node"]
   },
   "include": ["src/*"]
 }

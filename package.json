@@ -2,7 +2,7 @@
   "name": "jupyterlab_voyager",
   "version": "0.2.0",
   "description": "A JupyterLab extension for rendering CSV",
-  "author": "Saul Shanabrook <s.shanabrook@gmail.com>",
+  "author": "Saul Shanabrook <s.shanabrook@gmail.com>，Ji Zhang <zzhangjii@gmail.com>",
   "main": "lib/index.js",
   "license": "BSD-3-Clause",
   "keywords": [
@@ -13,7 +13,9 @@
   "files": [
     "lib/*.d.ts",
     "lib/*.js",
-    "lib/*.js.map"
+    "lib/*.js.map",
+    "style/**/*.{css,eot,gif,html,jpg,json,png,svg,woff2,ttf}",
+    "tutorial/*.{md,png,jpg}"
   ],
   "jupyterlab": {
     "extension": true
@@ -28,13 +30,26 @@
     "extension:disable": "jupyter labextension disable jupyterlab_voyager"
   },
   "dependencies": {
-    "@jupyterlab/application": "0.13.1",
-    "@jupyterlab/rendermime-interfaces": "^0.4.3",
-    "@phosphor/widgets": "^1.5.0",
-    "datavoyager": "v2.0.0-alpha.12"
+    "@jupyterlab/application": "^0.17.2",
+    "@jupyterlab/apputils": "^0.17.2",
+    "@jupyterlab/console": "^0.17.2",
+    "@jupyterlab/filebrowser": "^0.17.2",
+    "@jupyterlab/mainmenu": "^0.6.2",
+    "@jupyterlab/notebook": "0.17.2",
+    "@jupyterlab/rendermime-interfaces": "^1.1.2",
+    "@phosphor/widgets": "^1.6.0",
+    "datavoyager": "2.0.0-alpha.23",
+    "node-sass": "^4.9.0",
+    "react": "^16.4.0",
+    "react-dom": "^16.4.0",
+    "vega": "4.0.0-rc.1",
+    "webpack": "^4.8.3"
   },
   "devDependencies": {
-    "typescript": "~2.4.1",
+    "@types/node": "^9.6.5",
+    "typescript": "~2.9.2",
     "watch": "^1.0.2"
   }
 }
+
+
