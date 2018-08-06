@@ -5,7 +5,7 @@ import path = require("path");
 import {
   ActivityMonitor,
   PathExt,
-  ISettingRegistry //,nbformat
+  ISettingRegistry
 } from "@jupyterlab/coreutils";
 
 import {
@@ -73,17 +73,6 @@ const TOOLBAR_REDO_CLASS = "jp-RedoIcon";
  */
 const Voyager_CLASS = "jp-Voyager";
 
-export function isValidFileName(name: string): boolean {
-  const validNameExp = /[\/\\:]/;
-  return name.length > 0 && !validNameExp.test(name);
-}
-
-function isValidURL(str: string) {
-  var a = document.createElement("a");
-  a.href = str;
-  return a.host && a.host != window.location.host;
-}
-
 export class VoyagerPanel extends DocumentWidget<Widget> {
   public voyager_cur: Voyager = null;
   public data_src: any;
@@ -94,7 +83,8 @@ export class VoyagerPanel extends DocumentWidget<Widget> {
     app: JupyterLab,
     docManager: IDocumentManager
   ) {
-    super({ content: new Widget(), context: options.context });
+    options.content = new Widget();
+    super(options);
     this.addClass(Voyager_CLASS);
     this.fileType = PathExt.extname(context.localPath).substring(1);
 
@@ -128,7 +118,7 @@ export class VoyagerPanel extends DocumentWidget<Widget> {
           this.data_src = DATA;
           if (DATA["url"]) {
             //check if it's url type datasource
-            if (!isValidURL(DATA["url"])) {
+            if (!Private.isValidURL(DATA["url"])) {
               let basePath = PathExt.dirname(this._context.localPath);
               let wholePath = path.join(basePath, DATA["url"]);
               docManager.services.contents.get(wholePath).then(src => {
@@ -208,14 +198,17 @@ export class VoyagerPanel extends DocumentWidget<Widget> {
 
     // Toolbar
     this.toolbar.addClass(VOYAGER_PANEL_TOOLBAR_CLASS);
-    this.toolbar.addItem("save", createSaveButton(this));
-    this.toolbar.addItem("saveAs", createExportButton(this, app, docManager));
+    this.toolbar.addItem("save", Private.createSaveButton(this));
+    this.toolbar.addItem(
+      "saveAs",
+      Private.createExportButton(this, app, docManager)
+    );
     this.toolbar.addItem(
       "ExportToNotebook",
-      createCopyButton(this, app, docManager)
+      Private.createCopyButton(this, app, docManager)
     );
-    this.toolbar.addItem("undo", createUndoButton(this));
-    this.toolbar.addItem("redo", createRedoButton(this));
+    this.toolbar.addItem("undo", Private.createUndoButton(this));
+    this.toolbar.addItem("redo", Private.createRedoButton(this));
   }
 
   /**
@@ -266,15 +259,10 @@ export class VoyagerPanel extends DocumentWidget<Widget> {
 }
 
 /**Special VoyagerPanel for using dataframe as data src */
-export class VoyagerPanel_DF extends Widget
-  implements DocumentRegistry.IReadyWidget {
-  public voyager_cur: Voyager;
-  public voyager_widget: Widget;
+export class VoyagerPanel_DF extends DocumentWidget<Widget> {
+  public voyager_cur: Voyager = null;
   public data_src: any;
   public fileType = "tempory";
-  public toolbar: Toolbar<Widget>;
-  protected _context: DocumentRegistry.Context;
-  private _ready = new PromiseDelegate<void>();
 
   constructor(
     data: any,
@@ -284,16 +272,11 @@ export class VoyagerPanel_DF extends Widget
     app: JupyterLab,
     docManager: IDocumentManager
   ) {
-    super();
+    options.content = new Widget();
+    super(options);
     this.addClass(Voyager_CLASS);
-    this._context = context;
 
-    let layout = (this.layout = new BoxLayout({ spacing: 0 }));
-    layout.direction = "top-to-bottom";
-
-    this.content = new Widget();
     this._context.ready.then(_ => {
-      this._ready.resolve(undefined);
       if (isTable) {
         this.voyager_cur = CreateVoyager(
           this.content.node,
@@ -303,22 +286,13 @@ export class VoyagerPanel_DF extends Widget
       } else {
         var DATA = data["data"];
         this.data_src = DATA;
-        console.log(data["data"]);
         if (DATA["url"]) {
-          //check if it's url type datasource
-          //console.log('dataurl is: '+DATA['url'])
-          //fetch(DATA['url']).then(response => {console.log(response.json())})
-
-          if (!isValidURL(DATA["url"])) {
-            console.log("local url");
+          if (!Private.isValidURL(DATA["url"])) {
             let basePath = PathExt.dirname(this._context.localPath);
-            console.log(basePath);
             let filePath = PathExt.basename(DATA["url"]);
             let wholePath = path.join(basePath, filePath);
-            console.log(wholePath);
 
             docManager.services.contents.get(wholePath).then(src => {
-              console.log(src.content);
               let local_filetype = PathExt.extname(DATA["url"]).substring(1);
               let local_values = read(src.content, { type: local_filetype });
               this.voyager_cur = CreateVoyager(
@@ -328,7 +302,6 @@ export class VoyagerPanel_DF extends Widget
               );
             });
           } else {
-            console.log("web url");
             this.voyager_cur = CreateVoyager(
               this.content.node,
               Private.VoyagerConfig,
@@ -364,23 +337,20 @@ export class VoyagerPanel_DF extends Widget
       }
       this.title.label = fileName;
     });
+
     // Toolbar
-    this.toolbar = new Toolbar();
     this.toolbar.addClass(VOYAGER_PANEL_TOOLBAR_CLASS);
-    this.toolbar.addItem("save", createSaveButton(this));
-    this.toolbar.addItem("saveAs", createExportButton(this, app, docManager));
+    this.toolbar.addItem("save", Private.createSaveButton(this));
+    this.toolbar.addItem(
+      "saveAs",
+      Private.createExportButton(this, app, docManager)
+    );
     this.toolbar.addItem(
       "ExportToNotebook",
-      createCopyButton(this, app, docManager)
+      Private.createCopyButton(this, app, docManager)
     );
-    this.toolbar.addItem("undo", createUndoButton(this));
-    this.toolbar.addItem("redo", createRedoButton(this));
-    // this.toolbar.addItem('Bookmarks', createBookMarkButton(this));
-    BoxLayout.setStretch(this.toolbar, 0);
-    BoxLayout.setStretch(this.content, 1);
-    layout.addWidget(this.toolbar);
-    layout.addWidget(this.content);
-    //this.toolbar.hide();
+    this.toolbar.addItem("undo", Private.createUndoButton(this));
+    this.toolbar.addItem("redo", Private.createRedoButton(this));
   }
 
   /**
@@ -393,7 +363,7 @@ export class VoyagerPanel_DF extends Widget
 }
 
 export namespace Private {
-  const VoyagerConfig = {
+  export const VoyagerConfig = {
     // don't allow user to select another data source from Voyager UI
     showDataSourceSelector: false,
     serverUrl: null,
@@ -491,7 +461,7 @@ export namespace Private {
         }).then(result => {
           let msg = input.value;
           if (result.button.accept) {
-            if (!isValidFileName(msg)) {
+            if (!Private.isValidFilename(msg)) {
               showErrorMessage(
                 "Name Error",
                 Error(
@@ -608,5 +578,16 @@ export namespace Private {
       },
       tooltip: "Redo"
     });
+  }
+
+  export function isValidFilename(name: string): boolean {
+    const validNameExp = /[\/\\:]/;
+    return name.length > 0 && !validNameExp.test(name);
+  }
+
+  export function isValidURL(str: string) {
+    var a = document.createElement("a");
+    a.href = str;
+    return a.host && a.host != window.location.host;
   }
 }
