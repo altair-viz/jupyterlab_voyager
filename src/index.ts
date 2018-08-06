@@ -142,7 +142,7 @@ class VoyagerNotebookWidgetFactory extends ABCWidgetFactory<
             kernel: { name: this.KernalName ? this.KernalName : "Python 3" }
           })
           .then(widget => {
-            let md = (widget as NotebookPanel).notebook.model.toJSON() as nbformat.INotebookContent;
+            let md = (widget as NotebookPanel).content.model.toJSON() as nbformat.INotebookContent;
             let model = new NotebookModel();
             md.cells = [
               {
@@ -166,7 +166,7 @@ class VoyagerNotebookWidgetFactory extends ABCWidgetFactory<
             model.fromJSON(md);
             (widget as NotebookPanel).content.model = model;
             widget.context.save();
-            NotebookActions.runAll(widget.notebook, widget.context.session);
+            NotebookActions.runAll(widget.content, widget.context.session);
           });
       });
   }
@@ -274,9 +274,9 @@ function activate(
       const cur = getCurrent(args);
       if (cur) {
         var filename = cur.id + "_Voyager";
-        let cell = cur.notebook.activeCell;
+        let cell = cur.content.activeCell;
         if (cell.model.type === "code") {
-          let codeCell = cur.notebook.activeCell as CodeCell;
+          let codeCell = cur.content.activeCell as CodeCell;
           let outputs = codeCell.model.outputs;
           console.log(outputs);
           let i = 0;
@@ -340,10 +340,10 @@ function activate(
       console.log(cur);
       if (cur) {
         var filename = cur.id + "_Voyager";
-        let cell = cur.notebook.activeCell;
+        let cell = cur.content.activeCell;
         console.log(cell.model.type);
         if (cell.model.type === "code") {
-          let codeCell = cur.notebook.activeCell as CodeCell;
+          let codeCell = cur.content.activeCell as CodeCell;
           let outputs = codeCell.model.outputs;
           console.log(outputs);
           let i = 0;
@@ -748,10 +748,10 @@ function activate(
               }
             ];
             model.fromJSON(md);
-            (widget as NotebookPanel).notebook.model = model;
+            (widget as NotebookPanel).content.model = model;
             widget.context.save().then(() => {
               NotebookActions.runAndAdvance(
-                widget.notebook,
+                widget.content,
                 widget.context.session
               );
             });

@@ -74,7 +74,7 @@ const TOOLBAR_REDO_CLASS = "jp-RedoIcon";
 const Voyager_CLASS = "jp-Voyager";
 
 export class VoyagerPanel extends DocumentWidget<Widget> {
-  public voyager_cur: Voyager = null;
+  public voyager_cur: Voyager = undefined;
   public data_src: any;
   public fileType: String;
 
@@ -104,7 +104,7 @@ export class VoyagerPanel extends DocumentWidget<Widget> {
     this._onPathChanged();
     this.voyager_cur = null;
 
-    this._context.ready.then(_ => {
+    this.context.ready.then(() => {
       const data = context.model.toString();
       var values: any;
       if (this.fileType === "txt") {
@@ -119,7 +119,7 @@ export class VoyagerPanel extends DocumentWidget<Widget> {
           if (DATA["url"]) {
             //check if it's url type datasource
             if (!Private.isValidURL(DATA["url"])) {
-              let basePath = PathExt.dirname(this._context.localPath);
+              let basePath = PathExt.dirname(this.context.localPath);
               let wholePath = path.join(basePath, DATA["url"]);
               docManager.services.contents.get(wholePath).then(src => {
                 let local_filetype = PathExt.extname(DATA["url"]).substring(1);
@@ -237,7 +237,7 @@ export class VoyagerPanel extends DocumentWidget<Widget> {
   private _settings: ISettingRegistry.ISettings | null = null;
 
   private _onPathChanged(): void {
-    this.title.label = PathExt.basename(this._context.localPath);
+    this.title.label = PathExt.basename(this.context.localPath);
   }
 
   /**
@@ -260,7 +260,7 @@ export class VoyagerPanel extends DocumentWidget<Widget> {
 
 /**Special VoyagerPanel for using dataframe as data src */
 export class VoyagerPanel_DF extends DocumentWidget<Widget> {
-  public voyager_cur: Voyager = null;
+  public voyager_cur: Voyager = undefined;
   public data_src: any;
   public fileType = "tempory";
 
@@ -272,11 +272,10 @@ export class VoyagerPanel_DF extends DocumentWidget<Widget> {
     app: JupyterLab,
     docManager: IDocumentManager
   ) {
-    options.content = new Widget();
-    super(options);
+    super({ context, content: new Widget() });
     this.addClass(Voyager_CLASS);
 
-    this._context.ready.then(_ => {
+    this.context.ready.then(() => {
       if (isTable) {
         this.voyager_cur = CreateVoyager(
           this.content.node,
@@ -288,7 +287,7 @@ export class VoyagerPanel_DF extends DocumentWidget<Widget> {
         this.data_src = DATA;
         if (DATA["url"]) {
           if (!Private.isValidURL(DATA["url"])) {
-            let basePath = PathExt.dirname(this._context.localPath);
+            let basePath = PathExt.dirname(this.context.localPath);
             let filePath = PathExt.basename(DATA["url"]);
             let wholePath = path.join(basePath, filePath);
 
@@ -362,7 +361,12 @@ export class VoyagerPanel_DF extends DocumentWidget<Widget> {
   }
 }
 
-export namespace Private {
+export function isValidFilename(name: string): boolean {
+  const validNameExp = /[\/\\:]/;
+  return name.length > 0 && !validNameExp.test(name);
+}
+
+namespace Private {
   export const VoyagerConfig = {
     // don't allow user to select another data source from Voyager UI
     showDataSourceSelector: false,
@@ -461,7 +465,7 @@ export namespace Private {
         }).then(result => {
           let msg = input.value;
           if (result.button.accept) {
-            if (!Private.isValidFilename(msg)) {
+            if (!isValidFilename(msg)) {
               showErrorMessage(
                 "Name Error",
                 Error(
@@ -578,11 +582,6 @@ export namespace Private {
       },
       tooltip: "Redo"
     });
-  }
-
-  export function isValidFilename(name: string): boolean {
-    const validNameExp = /[\/\\:]/;
-    return name.length > 0 && !validNameExp.test(name);
   }
 
   export function isValidURL(str: string) {
