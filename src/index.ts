@@ -275,7 +275,7 @@ function activate(
       if (cur) {
         var filename = cur.id + "_Voyager";
         let cell = cur.content.activeCell;
-        if (cell.model.type === "code") {
+        if (cell && cell.model.type === "code") {
           let codeCell = cur.content.activeCell as CodeCell;
           let outputs = codeCell.model.outputs;
           console.log(outputs);
@@ -341,8 +341,7 @@ function activate(
       if (cur) {
         var filename = cur.id + "_Voyager";
         let cell = cur.content.activeCell;
-        console.log(cell.model.type);
-        if (cell.model.type === "code") {
+        if (cell && cell.model.type === "code") {
           let codeCell = cur.content.activeCell as CodeCell;
           let outputs = codeCell.model.outputs;
           console.log(outputs);
