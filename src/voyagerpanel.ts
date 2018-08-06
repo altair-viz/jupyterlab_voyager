@@ -17,7 +17,11 @@ import {
   showErrorMessage
 } from "@jupyterlab/apputils";
 
-import { DocumentWidget, Context } from "@jupyterlab/docregistry";
+import {
+  DocumentWidget,
+  Context,
+  DocumentRegistry
+} from "@jupyterlab/docregistry";
 
 import { Widget, BoxLayout } from "@phosphor/widgets";
 
