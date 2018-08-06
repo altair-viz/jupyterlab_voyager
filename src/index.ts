@@ -107,8 +107,7 @@ class VoyagerWidgetFactory extends ABCWidgetFactory<VoyagerPanel, DocumentRegist
     this.app = app;
   }
   protected createNewWidget(context: DocumentRegistry.Context): VoyagerPanel {
-    let ft = PathExt.extname(context.localPath).substring(1)
-    return new VoyagerPanel({context, fileType: ft},this.app,this.docManager);
+    return new VoyagerPanel({context}, this.app, this.docManager);
   }
 }
 
@@ -154,7 +153,7 @@ class VoyagerNotebookWidgetFactory extends ABCWidgetFactory<NotebookPanel, Docum
           ]
          }];
         model.fromJSON(md);
-        (widget as NotebookPanel).notebook.model = model;
+        (widget as NotebookPanel).content.model = model;
         widget.context.save();
         NotebookActions.runAll(widget.notebook, widget.context.session);
       });
@@ -619,7 +618,7 @@ function activate(app: JupyterLab, restorer: ILayoutRestorer, tracker_Notebook: 
       return commands.execute('docmanager:open', {
         path: model.path, factory: 'Notebook', kernel:{name: kernelName?kernelName:'Python 3'}
       }).then(widget=>{
-        let md = (widget as NotebookPanel).notebook.model.toJSON() as nbformat.INotebookContent;
+        let md = (widget as NotebookPanel).content.model.toJSON() as nbformat.INotebookContent;
         let model = new NotebookModel();
         md.cells = [{
           "cell_type": "code",
