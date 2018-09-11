@@ -6,7 +6,7 @@ import {
   ILayoutRestorer,
   JupyterLabPlugin,
   JupyterLab
-} from "@jupyterlab/application";
+} from '@jupyterlab/application';
 
 import {
   //ICommandPalette,
@@ -15,7 +15,7 @@ import {
   Dialog,
   showDialog,
   showErrorMessage
-} from "@jupyterlab/apputils";
+} from '@jupyterlab/apputils';
 
 import {
   ABCWidgetFactory,
@@ -27,7 +27,9 @@ import {
 
 import { Widget } from "@phosphor/widgets";
 
-import { IMainMenu } from "@jupyterlab/mainmenu";
+import {
+  IMainMenu
+} from '@jupyterlab/mainmenu';
 
 import { IDocumentManager } from "@jupyterlab/docmanager";
 
@@ -55,7 +57,7 @@ import "datavoyager/build/style.css";
 /**
  * The mimetype used for Jupyter cell data.
  */
-const JUPYTER_CELL_MIME = "application/vnd.jupyter.cells";
+const JUPYTER_CELL_MIME = 'application/vnd.jupyter.cells';
 
 /**
  * The class icon for a datavoyager widget.
@@ -65,7 +67,7 @@ const VOYAGER_ICON = "jp-VoyagerIcon";
 /**
  * The class name added to a datavoyager widget.
  */
-const Voyager_CLASS = "jp-Voyager";
+const Voyager_CLASS = 'jp-Voyager';
 
 /**
  * The source file for the Voyager tutorial.
@@ -198,6 +200,7 @@ class VoyagerNotebookWidgetFactory extends ABCWidgetFactory<
             NotebookActions.runAll(widget.notebook, widget.context.session);
           });
       });
+    });
   }
 }
 /**
@@ -216,12 +219,12 @@ function activate(
 ): void {
   // Declare a widget variable for tutorial
   let T_widget: VoyagerTutorialWidget;
-  const { commands } = app;
+  const { commands} = app;
 
   // Get the current cellar widget and activate unless the args specify otherwise.
   function getCurrent(args: ReadonlyJSONObject): NotebookPanel | null {
     const widget = tracker_Notebook.currentWidget;
-    const activate = args["activate"] !== false;
+    const activate = args['activate'] !== false;     
     if (activate && widget) {
       app.shell.activateById(widget.id);
     }
@@ -237,16 +240,16 @@ function activate(
   function createNew(cwd: string, data: any, open: boolean) {
     let input_block = document.createElement("div");
     let input_prompt = document.createElement("div");
-    input_prompt.textContent = "";
+    input_prompt.textContent = '';
     let input = document.createElement("input");
     input_block.appendChild(input_prompt);
     input_block.appendChild(input);
-    let bd = new Widget({ node: input_block });
+    let bd = new Widget({node:input_block});
     showDialog({
       title: "Export as Vega-Lite File (.vl.json)",
       body: bd,
-      buttons: [Dialog.cancelButton(), Dialog.okButton({ label: "OK" })]
-    }).then(result => {
+      buttons: [Dialog.cancelButton(), Dialog.okButton({ label: "OK"})]
+    }).then(result=>{
       let msg = input.value;
       if (result.button.accept) {
         if (!isValidFileName(msg)) {
@@ -260,61 +263,49 @@ function activate(
           );
         } else {
           let basePath = cwd;
-          let newPath = PathExt.join(
-            basePath,
-            msg.indexOf(".vl.json") !== -1 ? msg : msg + ".vl.json"
-          );
-          return commands
-            .execute("docmanager:new-untitled", {
-              path: cwd,
-              ext: ".vl.json",
-              type: "file"
+          let newPath = PathExt.join(basePath, msg.indexOf('.vl.json')!==-1?msg:msg+'.vl.json');
+          return commands.execute('docmanager:new-untitled', {
+            path: cwd, ext: '.vl.json', type: 'file'
+          }).then(model => {
+            return docManager.rename(model.path, newPath).then(model=>{
+            return commands.execute('docmanager:open', {
+              path: model.path, factory: "Editor"
+            }).then(widget=>{
+              let context = docManager.contextForWidget(widget);
+              if(context!=undefined){
+                context.save().then(()=>{
+                  if(context!=undefined){
+                    context.model.fromJSON(data);
+                    context.save().then(()=>{
+                      if (open) {
+                        commands.execute('docmanager:open', {
+                          path: model.path,
+                          factory: `Voyager`
+                        });
+                      }
+                    })     
+                  }
+                })
+              }})
             })
-            .then(model => {
-              return docManager.rename(model.path, newPath).then(model => {
-                return commands
-                  .execute("docmanager:open", {
-                    path: model.path,
-                    factory: "Editor"
-                  })
-                  .then(widget => {
-                    let context = docManager.contextForWidget(widget);
-                    if (context != undefined) {
-                      context.save().then(() => {
-                        if (context != undefined) {
-                          context.model.fromJSON(data);
-                          context.save().then(() => {
-                            if (open) {
-                              commands.execute("docmanager:open", {
-                                path: model.path,
-                                factory: `Voyager`
-                              });
-                            }
-                          });
-                        }
-                      });
-                    }
-                  });
-              });
-            });
-        }
-      }
-    });
-  }
+          });
+        }}
+    })
+  };
 
   /**
    * create and add the command to open a notebook graph in Voyager
    */
   commands.addCommand(CommandIDs.JL_Graph_Voyager, {
-    label: "Open Graph in Voyager",
-    caption: "Open the datasource in Voyager",
+    label: 'Open Graph in Voyager',
+    caption: 'Open the datasource in Voyager',
     execute: args => {
       const cur = getCurrent(args);
-      if (cur) {
-        var filename = cur.id + "_Voyager";
-        let cell = cur.content.activeCell;
-        if (cell && cell.model.type === "code") {
-          let codeCell = cur.content.activeCell as CodeCell;
+      if(cur){
+        var filename = cur.id+'_Voyager';
+        let cell = cur.notebook.activeCell;
+        if (cell.model.type === 'code') {
+          let codeCell = cur.notebook.activeCell as CodeCell;
           let outputs = codeCell.model.outputs;
           let i = 0;
           // Find the first altair image output of this cell,
@@ -347,12 +338,10 @@ function activate(
                 docManager
               );
               wdg.data_src = JSONobject;
-              wdg.id = filename + temp_widget_counter++;
-              wdg.title.closable = true;
-              wdg.title.iconClass = VOYAGER_ICON;
-              const tracker = new InstanceTracker<VoyagerPanel_DF>({
-                namespace: "VoyagerPanel_DataFrame"
-              });
+              wdg.id = filename+(temp_widget_counter++);		
+              wdg.title.closable = true;		
+              wdg.title.iconClass = VOYAGER_ICON;		
+              const tracker = new InstanceTracker<VoyagerPanel_DF>({ namespace: 'VoyagerPanel_DataFrame' });  
               tracker.add(wdg);
               app.shell.addToMainArea(wdg);
               app.shell.activateById(wdg.id);
@@ -369,8 +358,8 @@ function activate(
    * create and add the command to open a notebook table in Voyager
    */
   commands.addCommand(CommandIDs.JL_Table_Voyager, {
-    label: "Open table in Voyager",
-    caption: "Open the datasource in Voyager",
+    label: 'Open table in Voyager',
+    caption: 'Open the datasource in Voyager',
     execute: args => {
       const cur = getCurrent(args);
       if (cur) {
@@ -404,9 +393,7 @@ function activate(
               wdg.id = filename + temp_widget_counter++;
               wdg.title.closable = true;
               wdg.title.iconClass = VOYAGER_ICON;
-              const tracker = new InstanceTracker<VoyagerPanel_DF>({
-                namespace: "VoyagerPanel_DataFrame"
-              });
+              const tracker = new InstanceTracker<VoyagerPanel_DF>({ namespace: 'VoyagerPanel_DataFrame' });  
               tracker.add(wdg);
               app.shell.addToMainArea(wdg);
               app.shell.activateById(wdg.id);
@@ -423,33 +410,31 @@ function activate(
    * create and add the command to save the Voyager content
    */
   commands.addCommand(CommandIDs.JL_Voyager_Save, {
-    label: "     ",
-    caption: "Save the chart datasource as vl.json file",
+    label: '     ',
+    caption: 'Save the chart datasource as vl.json file',
     execute: args => {
       let widget = app.shell.currentWidget;
       if (widget) {
         var datavoyager = (widget as VoyagerPanel).voyager_cur;
         var dataSrc = (widget as VoyagerPanel).data_src;
         let spec = datavoyager.getSpec(false);
-        let context = docManager.contextForWidget(widget) as Context<
-          DocumentRegistry.IModel
-        >;
+        let context = docManager.contextForWidget(widget) as Context<DocumentRegistry.IModel>;
         context.model.fromJSON({
-          data: dataSrc,
-          mark: spec.mark,
-          encoding: spec.encoding,
-          height: spec.height,
-          width: spec.width,
-          description: spec.description,
-          name: spec.name,
-          selection: spec.selection,
-          title: spec.title,
-          transform: spec.transform
+          "data":dataSrc, 
+          "mark": spec.mark, 
+          "encoding": spec.encoding, 
+          "height":spec.height, 
+          "width":spec.width, 
+          "description":spec.description,
+          "name":spec.name,
+          "selection":spec.selection,
+          "title":spec.title,
+          "transform":spec.transform
         });
         context.save();
       }
     },
-    isEnabled: () => {
+    isEnabled: () =>{
       return false;
     }
   });
@@ -458,38 +443,36 @@ function activate(
    * create and add the command to save the Voyager content
    */
   commands.addCommand(CommandIDs.JL_Voyager_Save1, {
-    label: "Save Voyager Chart",
-    caption: "Save the chart datasource as vl.json file",
+    label: 'Save Voyager Chart',
+    caption: 'Save the chart datasource as vl.json file',
     execute: args => {
       let widget = app.shell.currentWidget;
-      if (widget) {
+      if(widget){
         var datavoyager = (widget as VoyagerPanel).voyager_cur;
         var dataSrc = (widget as VoyagerPanel).data_src;
         let spec = datavoyager.getSpec(false);
-        let context = docManager.contextForWidget(widget) as Context<
-          DocumentRegistry.IModel
-        >;
+        let context = docManager.contextForWidget(widget) as Context<DocumentRegistry.IModel>;
         context.model.fromJSON({
-          data: dataSrc,
-          mark: spec.mark,
-          encoding: spec.encoding,
-          height: spec.height,
-          width: spec.width,
-          description: spec.description,
-          name: spec.name,
-          selection: spec.selection,
-          title: spec.title,
-          transform: spec.transform
+          "data":dataSrc, 
+          "mark": spec.mark, 
+          "encoding": spec.encoding, 
+          "height":spec.height, 
+          "width":spec.width, 
+          "description":spec.description,
+          "name":spec.name,
+          "selection":spec.selection,
+          "title":spec.title,
+          "transform":spec.transform
         });
         context.save();
       }
     },
-    isEnabled: () => {
+    isEnabled: () =>{     
       let widget = app.shell.currentWidget;
       if (
         widget &&
         widget.hasClass(Voyager_CLASS) &&
-        (widget as VoyagerPanel).context.path.indexOf("vl.json") !== -1
+        (widget as VoyagerPanel).context.path.indexOf('vl.json') !== -1
       ) {
         return true;
       } else {
@@ -502,8 +485,8 @@ function activate(
    * create and add the command to export the Voyager content
    */
   commands.addCommand(CommandIDs.JL_Voyager_Export, {
-    label: "Export Voyager as Vega-Lite File",
-    caption: "Export the chart datasource as vl.json file",
+    label: 'Export Voyager as Vega-Lite File',
+    caption: 'Export the chart datasource as vl.json file',
     execute: args => {
       let widget = app.shell.currentWidget;
       if (widget) {
@@ -545,15 +528,10 @@ function activate(
     },
     isEnabled: () => {
       let widget = app.shell.currentWidget;
-      if (
-        widget &&
-        widget.hasClass(Voyager_CLASS) &&
-        (widget as VoyagerPanel | VoyagerPanel_DF).context.path.indexOf(
-          "vl.json"
-        ) === -1
-      ) {
-        return true;
-      } else {
+      if(widget&&widget.hasClass(Voyager_CLASS)&&(widget as VoyagerPanel|VoyagerPanel_DF).context.path.indexOf('vl.json')===-1){
+          return true;
+      }
+      else{
         return false;
       }
     }
@@ -563,8 +541,8 @@ function activate(
    * create and add the command to export the Voyager content to notebook(copy it to clipboard)
    */
   commands.addCommand(CommandIDs.JL_Voyager_Export_To_Notebook, {
-    label: "Copy Altair Graph to clipboard",
-    caption: "Copy the Altair graph python code to clipboard",
+    label: 'Copy Altair Graph to clipboard',
+    caption: 'Copy the Altair graph python code to clipboard',
     execute: args => {
       let widget = app.shell.currentWidget;
       if (widget) {
@@ -604,17 +582,12 @@ function activate(
         clipboard.setData(JUPYTER_CELL_MIME, data);
       }
     },
-    isEnabled: () => {
+    isEnabled: () =>{      
       let widget = app.shell.currentWidget;
-      if (
-        widget &&
-        widget.hasClass(Voyager_CLASS) &&
-        (widget as VoyagerPanel | VoyagerPanel_DF).voyager_cur.getSpec(
-          false
-        ) !== undefined
-      ) {
-        return true;
-      } else {
+      if(widget&&widget.hasClass(Voyager_CLASS)&&((widget as VoyagerPanel|VoyagerPanel_DF).voyager_cur.getSpec(false)!==undefined)){
+          return true;
+      }
+      else{
         return false;
       }
     }
@@ -682,15 +655,15 @@ function activate(
   restorer.restore(tracker0, {
     command,
     args: () => JSONExt.emptyObject,
-    name: () => "voyager_tutorial"
+    name: () => 'voyager_tutorial'
   });
 
   /**
    * create and add the command to display the tutorial page
    */
   commands.addCommand(CommandIDs.JL_Voyager_Tutorial, {
-    label: "Voyager FAQ",
-    caption: "Open tutorial page for JupyterLab_voyager",
+    label: 'Voyager FAQ',
+    caption: 'Open tutorial page for JupyterLab_voyager',
     execute: args => {
       if (!T_widget) {
         // Create a new widget if one does not exist
@@ -699,7 +672,7 @@ function activate(
           data: { "text/markdown": SOURCE }
         });
         content.renderModel(model);
-        content.addClass("jp-VoyagerTutorial-content");
+        content.addClass('jp-VoyagerTutorial-content');
         T_widget = new VoyagerTutorialWidget(content);
         T_widget.update();
       }
@@ -716,7 +689,7 @@ function activate(
       }
       // Activate the widget
       app.shell.activateById(T_widget.id);
-    }
+    },
   });
 
   //Add the tutorial command into top menu 'Help' button
@@ -776,17 +749,15 @@ function activate(
   //add context menu for altair image ouput
   app.contextMenu.addItem({
     command: CommandIDs.JL_Graph_Voyager,
-    selector:
-      ".p-Widget.jp-RenderedVegaCommon3.jp-RenderedVegaLite2.jp-OutputArea-output.vega-embed"
+    selector: '.p-Widget.jp-RenderedVegaCommon3.jp-RenderedVegaLite2.jp-OutputArea-output.vega-embed'
   });
   app.contextMenu.addItem({
     command: CommandIDs.JL_Graph_Voyager,
-    selector:
-      ".p-Widget.jp-RenderedVegaCommon.jp-RenderedVegaLite.vega-embed.jp-OutputArea-output"
+    selector: '.p-Widget.jp-RenderedVegaCommon.jp-RenderedVegaLite.vega-embed.jp-OutputArea-output'
   });
   app.contextMenu.addItem({
     command: CommandIDs.JL_Graph_Voyager,
-    selector: ".p-Widget.jp-RenderedImage.jp-OutputArea-output"
+    selector: '.p-Widget.jp-RenderedImage.jp-OutputArea-output'
   });
 
   //add context menu for table ouput
@@ -797,8 +768,8 @@ function activate(
 
   //add tsv file type to docRegistry to support "Open With ..." context menu;
   app.docRegistry.addFileType({
-    name: "tsv",
-    extensions: [".tsv"]
+    name: 'tsv',
+    extensions: ['.tsv']
   });
 
   // Track and restore the Voyager widget state
@@ -871,11 +842,11 @@ function activate(
   fileTypes_vega.map(ft => {
     let ftObj = app.docRegistry.getFileType(ft);
     if (ftObj == undefined) {
-      console.log("app docreg getfile type: undefined");
+      console.log('app docreg getfile type: undefined');
     } else {
-      console.log("app docreg getfile type: " + ftObj.name);
+      console.log('app docreg getfile type: ' + ftObj.name);
     }
-  });
+   })
 }
 
 //const plugin: JupyterLabPlugin<InstanceTracker<VoyagerPanel>> = {

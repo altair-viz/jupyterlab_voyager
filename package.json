@@ -43,29 +43,16 @@
     "@jupyterlab/rendermime": "^0.18.4",
     "@jupyterlab/rendermime-interfaces": "^1.1.2",
     "@phosphor/widgets": "^1.6.0",
-    "datavoyager": "2.0.0-alpha.24",
+    "datavoyager": "2.0.0-alpha.23",
     "node-sass": "^4.9.0",
-    "react": "~16.4.0",
-    "react-dom": "^16.3.2"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
-  },
-  "lint-staged": {
-    "*.{js,json,css,md,ts,tsx}": [
-      "prettier --write",
-      "git add"
-    ]
+    "react": "^16.3.2",
+    "react-dom": "^16.3.2",
+    "vega": "4.0.0-rc.1",
+    "webpack": "^4.8.3"
   },
   "devDependencies": {
     "@types/node": "^9.6.5",
-    "typescript": "~2.9.2",
-    "watch": "^1.0.2",
-    "webpack": "~4.12.0",
-    "lint-staged": "^7.2.0",
-    "prettier": "^1.13.7",
-    "husky": "^1.0.0-rc.13"
+    "typescript": "~2.4.1",
+    "watch": "^1.0.2"
   }
 }

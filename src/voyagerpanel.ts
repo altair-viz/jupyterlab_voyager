@@ -1,6 +1,6 @@
 ///<reference path="./lib.d.ts"/>
 
-import path = require("path");
+import path = require('path');
 
 import {
   ActivityMonitor,
@@ -21,7 +21,9 @@ import { DocumentRegistry, Context } from "@jupyterlab/docregistry";
 
 import { Widget, BoxLayout } from "@phosphor/widgets";
 
-import { Message } from "@phosphor/messaging";
+import {
+  Message
+} from '@phosphor/messaging';
 
 import { IDocumentManager, DocumentManager } from "@jupyterlab/docmanager";
 
@@ -44,33 +46,34 @@ import { JupyterLab } from "@jupyterlab/application";
 /**
  * The mimetype used for Jupyter cell data.
  */
-const JUPYTER_CELL_MIME = "application/vnd.jupyter.cells";
+const JUPYTER_CELL_MIME = 'application/vnd.jupyter.cells';
 
 const VOYAGER_PANEL_TOOLBAR_CLASS = "jp-VoyagerPanel-toolbar";
+
 /**
  * The class name added to toolbar save button.
  */
-const TOOLBAR_SAVE_CLASS = "jp-SaveIcon";
+const TOOLBAR_SAVE_CLASS = 'jp-SaveIcon';
 
 /**
  * The class name added to toolbar insert button.
  */
-const TOOLBAR_EXPORT_CLASS = "jp-ExportIcon";
+const TOOLBAR_EXPORT_CLASS = 'jp-ExportIcon';
 
 /**
  * The class name added to toolbar insert button.
  */
-const TOOLBAR_COPY_CLASS = "jp-CopyIcon";
+const TOOLBAR_COPY_CLASS = 'jp-CopyIcon';
 
 /**
  * The class name added to toolbar cut button.
  */
-const TOOLBAR_UNDO_CLASS = "jp-UndoIcon";
+const TOOLBAR_UNDO_CLASS = 'jp-UndoIcon';
 
 /**
  * The class name added to toolbar copy button.
  */
-const TOOLBAR_REDO_CLASS = "jp-RedoIcon";
+const TOOLBAR_REDO_CLASS = 'jp-RedoIcon';
 
 /**
  * The class name added to a datavoyager widget.
@@ -478,9 +481,9 @@ export class VoyagerPanel extends Widget {
       } else {
         values = read(data, { type: this.fileType });
       }
-      if (this.fileType === "json" || this.fileType === "txt") {
-        if (values["data"]) {
-          var DATA = values["data"];
+      if(this.fileType==='json'||this.fileType==='txt'){
+        if(values['data']){
+          var DATA = values['data'];
           this.data_src = DATA;
           if (DATA["url"]) {
             //check if it's url type datasource
@@ -498,16 +501,15 @@ export class VoyagerPanel extends Widget {
                   { values: local_values }
                 );
                 this.voyager_cur.setSpec({
-                  mark: values["mark"],
-                  encoding: values["encoding"],
-                  height: values["height"],
-                  width: values["width"],
-                  description: values["description"],
-                  name: values["name"],
-                  selection: values["selection"],
-                  title: values["title"],
-                  transform: values["transform"]
-                });
+                  "mark": values['mark'], 
+                  "encoding": values['encoding'], 
+                  "height":values['height'], 
+                  "width":values['width'], 
+                  "description":values['description'],
+                  "name":values['name'],
+                  "selection":values['selection'],
+                  "title":values['title'],
+                  "transform":values['transform']
               });
             } else {
               //web url case: can directly use web url as data source
@@ -544,15 +546,15 @@ export class VoyagerPanel extends Widget {
         }
         //update the specs if possible
         this.voyager_cur.setSpec({
-          mark: values["mark"],
-          encoding: values["encoding"],
-          height: values["height"],
-          width: values["width"],
-          description: values["description"],
-          name: values["name"],
-          selection: values["selection"],
-          title: values["title"],
-          transform: values["transform"]
+            "mark": values['mark'], 
+            "encoding": values['encoding'], 
+            "height":values['height'], 
+            "width":values['width'], 
+            "description":values['description'],
+            "name":values['name'],
+            "selection":values['selection'],
+            "title":values['title'],
+            "transform":values['transform']
         });
       } else {
         this.voyager_cur = CreateVoyager(
@@ -562,7 +564,11 @@ export class VoyagerPanel extends Widget {
         );
         this.data_src = { values };
       }
-    });
+      else{
+        this.voyager_cur = CreateVoyager(this.voyager_widget.node, VoyagerPanel.config, { values });
+        this.data_src = {values};
+      }
+    })
 
     //Create the Toolbar
     this.toolbar = new Toolbar();
@@ -638,7 +644,7 @@ export class VoyagerPanel extends Widget {
     }
     this.update();
   }
-  /**
+    /**
    * Handle setting changes.
    */
   private _onSettingsChanged(): void {
@@ -646,6 +652,7 @@ export class VoyagerPanel extends Widget {
   }
 
   private _settings: ISettingRegistry.ISettings | null = null;
+
 
   /**
    * A promise that resolves when the file editor is ready.
@@ -675,7 +682,7 @@ export class VoyagerPanel extends Widget {
     return this._stateChanged;
   }
 
-  /**
+    /**
    * Handle `'activate-request'` messages.
    */
   protected onActivateRequest(msg: Message): void {
