@@ -31,7 +31,7 @@ describe('Loading files into Voyager', () => {
         it(`Can open ${filename} in Voyager`, () => {
             getFile(filename)
                 .trigger('contextmenu')
-            cy.get('.p-Menu-item div:contains("Open With...")')
+            cy.get('.p-Menu-item div:contains("Open With")')
                 .trigger('mousemove')
             cy.get('.p-Menu-item div:contains("Voyager")')
                 .trigger('mousemove')
@@ -67,4 +67,3 @@ describe('Loading files into Voyager', () => {
         })
     })
 })
-
