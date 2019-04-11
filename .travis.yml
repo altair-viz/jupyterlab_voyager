@@ -8,10 +8,10 @@ before_install:
   - export PATH=/home/travis/miniconda2/bin:$PATH
   - conda update -q --yes conda
 install:
-  - conda install -q -y -c anaconda-platform yarnpkg=0.27.5
+  - conda install -q -y -c anaconda-platform yarnpkg=1.3.2
   - npm config set loglevel warn
-  - conda install -q -y -c conda-forge jupyterlab=0.28.0
-  - npm install --quiet -g cypress@1.0.3
+  - conda install -q -y -c conda-forge jupyterlab=0.35.4
+  - npm install --quiet -g cypress@3.2.0
   - export PATH=$PATH:$(npm bin)
   - cypress verify
   - yarn install --frozen-lockfile --ignore-scripts
@@ -21,4 +21,3 @@ before_script:
   - sleep 10
 script:
   - cypress run --record
-

@@ -478,8 +478,6 @@ export class VoyagerPanel extends Widget {
       //read in the data
       if (this.fileType === "txt") {
         values = read(data, { type: "json" });
-      } else if (this.fileType === "csv") {
-        values = read(data, { type: "csv", parse: "auto" });
       } else {
         values = read(data, { type: this.fileType });
       }
@@ -504,10 +502,10 @@ export class VoyagerPanel extends Widget {
                 );
               });
                 this.voyager_cur.setSpec({
-                  "mark": values['mark'], 
-                  "encoding": values['encoding'], 
-                  "height":values['height'], 
-                  "width":values['width'], 
+                  "mark": values['mark'],
+                  "encoding": values['encoding'],
+                  "height":values['height'],
+                  "width":values['width'],
                   "description":values['description'],
                   "name":values['name'],
                   "selection":values['selection'],
@@ -549,10 +547,10 @@ export class VoyagerPanel extends Widget {
         }
         //update the specs if possible
         this.voyager_cur.setSpec({
-            "mark": values['mark'], 
-            "encoding": values['encoding'], 
-            "height":values['height'], 
-            "width":values['width'], 
+            "mark": values['mark'],
+            "encoding": values['encoding'],
+            "height":values['height'],
+            "width":values['width'],
             "description":values['description'],
             "name":values['name'],
             "selection":values['selection'],
@@ -566,12 +564,8 @@ export class VoyagerPanel extends Widget {
           { values }
         );
         this.data_src = { values };
-      } 
-      // else {
-      //   this.voyager_cur = CreateVoyager(this.voyager_widget.node, VoyagerPanel.config, { values });
-      //   this.data_src = {values};
-      // }
-    })
+      }
+    });
 
     //Create the Toolbar
     this.toolbar = new Toolbar();
