@@ -11,13 +11,10 @@ install:
   - conda install -q -y -c conda-forge yarn=1.15.2
   - npm config set loglevel warn
   - conda install -q -y -c conda-forge jupyterlab=0.35.4
-  - npm install --quiet -g cypress@3.2.0
-  - export PATH=$PATH:$(npm bin)
-  - cypress verify
   - yarn install --frozen-lockfile --ignore-scripts
-  - jupyter labextension link .
+  - jupyter labextension install .
 before_script:
   - jupyter lab --port=8889 &
   - sleep 10
 script:
-  - cypress run --record
+  - npx cypress run --record
