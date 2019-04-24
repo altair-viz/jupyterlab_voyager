@@ -44,7 +44,6 @@ running jupyter lab build to solve this problem.
 For a development install (requires npm version 4 or later, yarn, and jupyterlab), do the following in the repository directory:
 
 ```bash
-
 yarn install
 jupyter labextension link .
 ```
@@ -61,22 +60,19 @@ Reload the page to see new code changes.
 
 ### Testing
 
-First install cypress:
+You can run the E2E tests with cypress:
 
 ```bash
-npm install -g cypress@1.0.3
-```
+jupyter lab --port=8889
 
-Then you can run the tests:
-
-```bash
-cypress run
+# in a new window
+npx cypress run
 ```
 
 Or open Cypress for an interactive experience:
 
 ```bash
-cypress open
+npx cypress open
 ```
 
 ## Docker

@@ -500,11 +500,12 @@ export class VoyagerPanel extends Widget {
                   VoyagerPanel.config,
                   { values: local_values }
                 );
+              });
                 this.voyager_cur.setSpec({
-                  "mark": values['mark'], 
-                  "encoding": values['encoding'], 
-                  "height":values['height'], 
-                  "width":values['width'], 
+                  "mark": values['mark'],
+                  "encoding": values['encoding'],
+                  "height":values['height'],
+                  "width":values['width'],
                   "description":values['description'],
                   "name":values['name'],
                   "selection":values['selection'],
@@ -546,10 +547,10 @@ export class VoyagerPanel extends Widget {
         }
         //update the specs if possible
         this.voyager_cur.setSpec({
-            "mark": values['mark'], 
-            "encoding": values['encoding'], 
-            "height":values['height'], 
-            "width":values['width'], 
+            "mark": values['mark'],
+            "encoding": values['encoding'],
+            "height":values['height'],
+            "width":values['width'],
             "description":values['description'],
             "name":values['name'],
             "selection":values['selection'],
@@ -564,11 +565,7 @@ export class VoyagerPanel extends Widget {
         );
         this.data_src = { values };
       }
-      else{
-        this.voyager_cur = CreateVoyager(this.voyager_widget.node, VoyagerPanel.config, { values });
-        this.data_src = {values};
-      }
-    })
+    });
 
     //Create the Toolbar
     this.toolbar = new Toolbar();

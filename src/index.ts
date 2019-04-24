@@ -124,8 +124,10 @@ class VoyagerWidgetFactory extends ABCWidgetFactory<
   protected createNewWidget(
     context: DocumentRegistry.IContext<DocumentRegistry.IModel>
   ): IDocumentWidget<VoyagerPanel> {
+    let context_array = context.path.split(".");
+    const file_type = context_array[context_array.length-1];
     const content = new VoyagerPanel(
-      { context, fileType: "" },
+      { context, fileType: file_type },
       this.app,
       this.docManager
     );
@@ -200,9 +202,9 @@ class VoyagerNotebookWidgetFactory extends ABCWidgetFactory<
             NotebookActions.runAll(widget.notebook, widget.context.session);
           });
       });
-    });
+    }
   }
-}
+
 /**
  * Define the supported file types.
  */
@@ -224,7 +226,7 @@ function activate(
   // Get the current cellar widget and activate unless the args specify otherwise.
   function getCurrent(args: ReadonlyJSONObject): NotebookPanel | null {
     const widget = tracker_Notebook.currentWidget;
-    const activate = args['activate'] !== false;     
+    const activate = args['activate'] !== false;
     if (activate && widget) {
       app.shell.activateById(widget.id);
     }
@@ -283,7 +285,7 @@ function activate(
                           factory: `Voyager`
                         });
                       }
-                    })     
+                    })
                   }
                 })
               }})
@@ -303,9 +305,9 @@ function activate(
       const cur = getCurrent(args);
       if(cur){
         var filename = cur.id+'_Voyager';
-        let cell = cur.notebook.activeCell;
-        if (cell.model.type === 'code') {
-          let codeCell = cur.notebook.activeCell as CodeCell;
+        let cell = cur.content.activeCell;
+        if (cell && cell.model.type === "code") {
+          let codeCell = cur.content.activeCell as CodeCell;
           let outputs = codeCell.model.outputs;
           let i = 0;
           // Find the first altair image output of this cell,
@@ -338,10 +340,10 @@ function activate(
                 docManager
               );
               wdg.data_src = JSONobject;
-              wdg.id = filename+(temp_widget_counter++);		
-              wdg.title.closable = true;		
-              wdg.title.iconClass = VOYAGER_ICON;		
-              const tracker = new InstanceTracker<VoyagerPanel_DF>({ namespace: 'VoyagerPanel_DataFrame' });  
+              wdg.id = filename+(temp_widget_counter++);
+              wdg.title.closable = true;
+              wdg.title.iconClass = VOYAGER_ICON;
+              const tracker = new InstanceTracker<VoyagerPanel_DF>({ namespace: 'VoyagerPanel_DataFrame' });
               tracker.add(wdg);
               app.shell.addToMainArea(wdg);
               app.shell.activateById(wdg.id);
@@ -393,7 +395,7 @@ function activate(
               wdg.id = filename + temp_widget_counter++;
               wdg.title.closable = true;
               wdg.title.iconClass = VOYAGER_ICON;
-              const tracker = new InstanceTracker<VoyagerPanel_DF>({ namespace: 'VoyagerPanel_DataFrame' });  
+              const tracker = new InstanceTracker<VoyagerPanel_DF>({ namespace: 'VoyagerPanel_DataFrame' });
               tracker.add(wdg);
               app.shell.addToMainArea(wdg);
               app.shell.activateById(wdg.id);
@@ -420,11 +422,11 @@ function activate(
         let spec = datavoyager.getSpec(false);
         let context = docManager.contextForWidget(widget) as Context<DocumentRegistry.IModel>;
         context.model.fromJSON({
-          "data":dataSrc, 
-          "mark": spec.mark, 
-          "encoding": spec.encoding, 
-          "height":spec.height, 
-          "width":spec.width, 
+          "data":dataSrc,
+          "mark": spec.mark,
+          "encoding": spec.encoding,
+          "height":spec.height,
+          "width":spec.width,
           "description":spec.description,
           "name":spec.name,
           "selection":spec.selection,
@@ -453,11 +455,11 @@ function activate(
         let spec = datavoyager.getSpec(false);
         let context = docManager.contextForWidget(widget) as Context<DocumentRegistry.IModel>;
         context.model.fromJSON({
-          "data":dataSrc, 
-          "mark": spec.mark, 
-          "encoding": spec.encoding, 
-          "height":spec.height, 
-          "width":spec.width, 
+          "data":dataSrc,
+          "mark": spec.mark,
+          "encoding": spec.encoding,
+          "height":spec.height,
+          "width":spec.width,
           "description":spec.description,
           "name":spec.name,
           "selection":spec.selection,
@@ -467,7 +469,7 @@ function activate(
         context.save();
       }
     },
-    isEnabled: () =>{     
+    isEnabled: () =>{
       let widget = app.shell.currentWidget;
       if (
         widget &&
@@ -582,7 +584,7 @@ function activate(
         clipboard.setData(JUPYTER_CELL_MIME, data);
       }
     },
-    isEnabled: () =>{      
+    isEnabled: () =>{
       let widget = app.shell.currentWidget;
       if(widget&&widget.hasClass(Voyager_CLASS)&&((widget as VoyagerPanel|VoyagerPanel_DF).voyager_cur.getSpec(false)!==undefined)){
           return true;

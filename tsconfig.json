@@ -6,10 +6,10 @@
     "noUnusedLocals": true,
     "module": "commonjs",
     "moduleResolution": "node",
-    "target": "ES5",
+    "target": "es2015",
     "skipLibCheck": true,
     "outDir": "./lib",
-    "lib": ["es5", "es2015.promise", "dom"],
+    "lib": ["es5", "es2015.promise","dom"],
     "types": ["node"]
   },
   "include": ["src/*"]

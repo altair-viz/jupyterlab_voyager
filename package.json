@@ -30,29 +30,29 @@
     "extension:disable": "jupyter labextension disable jupyterlab_voyager"
   },
   "dependencies": {
-    "@jupyterlab/application": "^0.18.4",
-    "@jupyterlab/apputils": "^0.18.4",
-    "@jupyterlab/cells": "^0.18.4",
-    "@jupyterlab/console": "^0.18.4",
+    "@jupyterlab/application": "^0.19.1",
+    "@jupyterlab/apputils": "^0.19.1",
+    "@jupyterlab/cells": "^0.19.1",
+    "@jupyterlab/console": "^0.19.1",
     "@jupyterlab/coreutils": "^2.1.4",
-    "@jupyterlab/docmanager": "^0.18.4",
-    "@jupyterlab/docregistry": "^0.18.4",
-    "@jupyterlab/filebrowser": "^0.18.6",
-    "@jupyterlab/mainmenu": "^0.7.4",
-    "@jupyterlab/notebook": "0.18.4",
-    "@jupyterlab/rendermime": "^0.18.4",
+    "@jupyterlab/docmanager": "^0.19.1",
+    "@jupyterlab/docregistry": "^0.19.1",
+    "@jupyterlab/filebrowser": "^0.19.3",
+    "@jupyterlab/mainmenu": "^0.8.1",
+    "@jupyterlab/notebook": "^0.19.2",
+    "@jupyterlab/rendermime": "^0.19.1",
     "@jupyterlab/rendermime-interfaces": "^1.1.2",
     "@phosphor/widgets": "^1.6.0",
-    "datavoyager": "2.0.0-alpha.23",
+    "datavoyager": "2.0.0-alpha.24",
     "node-sass": "^4.9.0",
     "react": "^16.3.2",
     "react-dom": "^16.3.2",
-    "vega": "4.0.0-rc.1",
-    "webpack": "^4.8.3"
+    "vega": "^5.3.3",
+    "webpack": "^4.29.6"
   },
   "devDependencies": {
     "@types/node": "^9.6.5",
-    "typescript": "~2.4.1",
+    "typescript": "~3.4.1",
     "watch": "^1.0.2"
   }
 }
