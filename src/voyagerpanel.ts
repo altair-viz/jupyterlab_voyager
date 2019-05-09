@@ -481,6 +481,19 @@ export class VoyagerPanel extends Widget {
       } else {
         values = read(data, { type: this.fileType });
       }
+      const spec: Object = {
+        "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
+        "data": values['data'],
+        "mark": values['mark'],
+        "encoding": values['encoding'],
+        "height":values['height'],
+        "width":values['width'],
+        "description":values['description'],
+        "name":values['name'],
+        "selection":values['selection'],
+        "title":values['title'],
+        "transform":values['transform']
+      };
       if(this.fileType==='json'||this.fileType==='txt'){
         if(values['data']){
           var DATA = values['data'];
@@ -501,17 +514,7 @@ export class VoyagerPanel extends Widget {
                   { values: local_values }
                 );
               });
-                this.voyager_cur.setSpec({
-                  "mark": values['mark'],
-                  "encoding": values['encoding'],
-                  "height":values['height'],
-                  "width":values['width'],
-                  "description":values['description'],
-                  "name":values['name'],
-                  "selection":values['selection'],
-                  "title":values['title'],
-                  "transform":values['transform']
-              });
+                this.voyager_cur.setSpec(spec);
             } else {
               //web url case: can directly use web url as data source
               this.voyager_cur = CreateVoyager(
@@ -546,17 +549,7 @@ export class VoyagerPanel extends Widget {
           this.data_src = { values };
         }
         //update the specs if possible
-        this.voyager_cur.setSpec({
-            "mark": values['mark'],
-            "encoding": values['encoding'],
-            "height":values['height'],
-            "width":values['width'],
-            "description":values['description'],
-            "name":values['name'],
-            "selection":values['selection'],
-            "title":values['title'],
-            "transform":values['transform']
-        });
+        this.voyager_cur.setSpec(spec);
       } else {
         this.voyager_cur = CreateVoyager(
           this.voyager_widget.node,
