@@ -490,11 +490,11 @@ function activate(
     label: 'Export Voyager as Vega-Lite File',
     caption: 'Export the chart datasource as vl.json file',
     execute: args => {
-      let widget = app.shell.currentWidget;
+      let widget = app.shell.currentWidget as DocumentWidget;
       if (widget) {
-        var datavoyager = (widget as VoyagerPanel | VoyagerPanel_DF)
-          .voyager_cur;
-        var dataSrc = (widget as VoyagerPanel | VoyagerPanel_DF).data_src;
+        const voyager_panel = widget.content as VoyagerPanel | VoyagerPanel_DF
+        var datavoyager = voyager_panel.voyager_cur;
+        var dataSrc = voyager_panel.data_src;
         let context = docManager.contextForWidget(widget) as Context<
           DocumentRegistry.IModel
         >;
@@ -529,8 +529,8 @@ function activate(
       }
     },
     isEnabled: () => {
-      let widget = app.shell.currentWidget;
-      if(widget&&widget.hasClass(Voyager_CLASS)&&(widget as VoyagerPanel|VoyagerPanel_DF).context.path.indexOf('vl.json')===-1){
+      let widget = app.shell.currentWidget as DocumentWidget;
+      if(widget&&widget.content.hasClass(Voyager_CLASS)&&(widget.content as VoyagerPanel|VoyagerPanel_DF).context.path.indexOf('vl.json')===-1){
           return true;
       }
       else{
