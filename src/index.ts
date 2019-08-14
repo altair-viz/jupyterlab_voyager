@@ -4,13 +4,13 @@ import { PathExt, nbformat } from "@jupyterlab/coreutils";
 
 import {
   ILayoutRestorer,
-  JupyterLabPlugin,
-  JupyterLab
+  JupyterFrontEndPlugin,
+  JupyterFrontEnd
 } from '@jupyterlab/application';
 
 import {
   //ICommandPalette,
-  InstanceTracker,
+  WidgetTracker,
   Clipboard,
   Dialog,
   showDialog,
@@ -31,7 +31,7 @@ import {
   IMainMenu
 } from '@jupyterlab/mainmenu';
 
-import { IDocumentManager } from "@jupyterlab/docmanager";
+import { IDocumentManager, DocumentManager } from "@jupyterlab/docmanager";
 
 import { IRenderMimeRegistry } from "@jupyterlab/rendermime";
 
@@ -102,15 +102,15 @@ export namespace CommandIDs {
 class VoyagerWidgetFactory extends ABCWidgetFactory<
   IDocumentWidget<VoyagerPanel>
 > {
-  docManager: IDocumentManager;
-  app: JupyterLab;
+  docManager: DocumentManager;
+  app: JupyterFrontEnd;
 
   /**
    * Construct a new Voyager widget factory.
    */
   constructor(
-    app: JupyterLab,
-    docManager: IDocumentManager,
+    app: JupyterFrontEnd,
+    docManager: DocumentManager,
     options: DocumentRegistry.IWidgetFactoryOptions
   ) {
     super(options);
@@ -143,14 +143,14 @@ class VoyagerNotebookWidgetFactory extends ABCWidgetFactory<
   NotebookPanel,
   DocumentRegistry.IModel
 > {
-  app: JupyterLab;
+  app: JupyterFrontEnd;
   KernalName?: string;
 
   /**
    * Construct a new notebook widget factory.
    */
   constructor(
-    app: JupyterLab,
+    app: JupyterFrontEnd,
     options: DocumentRegistry.IWidgetFactoryOptions,
     kernelName?: string
   ) {
@@ -212,10 +212,10 @@ const fileTypes = ["csv", "json", "tsv"];
 const fileTypes_vega = ["vega-lite2", "vega3"];
 
 function activate(
-  app: JupyterLab,
+  app: JupyterFrontEnd,
   restorer: ILayoutRestorer,
   tracker_Notebook: NotebookTracker,
-  docManager: IDocumentManager,
+  docManager: DocumentManager,
   mainMenu: IMainMenu,
   rendermime: IRenderMimeRegistry
 ): void {
@@ -343,9 +343,9 @@ function activate(
               wdg.id = filename+(temp_widget_counter++);
               wdg.title.closable = true;
               wdg.title.iconClass = VOYAGER_ICON;
-              const tracker = new InstanceTracker<VoyagerPanel_DF>({ namespace: 'VoyagerPanel_DataFrame' });
+              const tracker = new WidgetTracker<VoyagerPanel_DF>({ namespace: 'VoyagerPanel_DataFrame' });
               tracker.add(wdg);
-              app.shell.addToMainArea(wdg);
+              app.shell.add(wdg, 'main');
               app.shell.activateById(wdg.id);
               break;
             }
@@ -395,9 +395,9 @@ function activate(
               wdg.id = filename + temp_widget_counter++;
               wdg.title.closable = true;
               wdg.title.iconClass = VOYAGER_ICON;
-              const tracker = new InstanceTracker<VoyagerPanel_DF>({ namespace: 'VoyagerPanel_DataFrame' });
+              const tracker = new WidgetTracker<VoyagerPanel_DF>({ namespace: 'VoyagerPanel_DataFrame' });
               tracker.add(wdg);
-              app.shell.addToMainArea(wdg);
+              app.shell.add(wdg, 'main');
               app.shell.activateById(wdg.id);
               break;
             }
@@ -650,7 +650,7 @@ function activate(
   });
 
   // Track and restore the tutorial widget state
-  let tracker0 = new InstanceTracker<VoyagerTutorialWidget>({
+  let tracker0 = new WidgetTracker<VoyagerTutorialWidget>({
     namespace: "voyager_tutorial"
   });
   const command: string = CommandIDs.JL_Voyager_Tutorial;
@@ -684,7 +684,7 @@ function activate(
       }
       if (!T_widget.isAttached) {
         // Attach the widget to the main area if it's not there
-        app.shell.addToMainArea(T_widget);
+        app.shell.add(T_widget, 'main');
       } else {
         // Refresh the comic in the widget
         T_widget.update();
@@ -776,7 +776,7 @@ function activate(
 
   // Track and restore the Voyager widget state
   const factoryName1 = `Voyager`;
-  const tracker1 = new InstanceTracker<IDocumentWidget<VoyagerPanel>>({
+  const tracker1 = new WidgetTracker<IDocumentWidget<VoyagerPanel>>({
     namespace: factoryName1
   });
   const factory1 = new VoyagerWidgetFactory(app, docManager, {
@@ -815,7 +815,7 @@ function activate(
 
   // Track and restore the notebook widget state (for opening vegalite file in notebook)
   const factoryName2 = `Vegalite in New Notebook`;
-  const tracker2 = new InstanceTracker<NotebookPanel>({
+  const tracker2 = new WidgetTracker<NotebookPanel>({
     namespace: factoryName2
   });
   const factory2 = new VoyagerNotebookWidgetFactory(app, {
@@ -851,9 +851,9 @@ function activate(
    })
 }
 
-//const plugin: JupyterLabPlugin<InstanceTracker<VoyagerPanel>> = {
-const plugin: JupyterLabPlugin<void> = {
-  activate,
+//const plugin: JupyterFrontEndPlugin<WidgetTracker<VoyagerPanel>> = {
+const plugin: JupyterFrontEndPlugin<void> = {
+  activate: activate,
   id: "jupyterlab_voyager:plugin",
   autoStart: true,
   requires: [

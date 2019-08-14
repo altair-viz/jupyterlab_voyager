@@ -25,7 +25,7 @@ import {
   Message
 } from '@phosphor/messaging';
 
-import { IDocumentManager, DocumentManager } from "@jupyterlab/docmanager";
+import { DocumentManager } from "@jupyterlab/docmanager";
 
 import { ISignal, Signal } from "@phosphor/signaling";
 
@@ -41,7 +41,7 @@ import { PromiseDelegate } from "@phosphor/coreutils";
 
 import "../style/index.css";
 
-import { JupyterLab } from "@jupyterlab/application";
+import { JupyterFrontEnd } from "@jupyterlab/application";
 
 /**
  * The mimetype used for Jupyter cell data.
@@ -85,7 +85,7 @@ const Voyager_CLASS = "jp-Voyager";
  */
 export function createSaveButton(
   widget: VoyagerPanel | VoyagerPanel_DF,
-  app: JupyterLab,
+  app: JupyterFrontEnd,
   docManager: DocumentManager
 ): ToolbarButton {
   return new ToolbarButton({
@@ -214,7 +214,7 @@ export function createSaveButton(
  */
 export function createExportButton(
   widget: VoyagerPanel | VoyagerPanel_DF,
-  app: JupyterLab,
+  app: JupyterFrontEnd,
   docManager: DocumentManager
 ): ToolbarButton {
   return new ToolbarButton({
@@ -312,7 +312,7 @@ export function createExportButton(
  */
 export function createCopyButton(
   widget: VoyagerPanel | VoyagerPanel_DF,
-  app: JupyterLab,
+  app: JupyterFrontEnd,
   docManager: DocumentManager
 ): ToolbarButton {
   return new ToolbarButton({
@@ -442,8 +442,8 @@ export class VoyagerPanel extends Widget {
 
   constructor(
     options: VoyagerPanel.IOptions,
-    app: JupyterLab,
-    docManager: IDocumentManager
+    app: JupyterFrontEnd,
+    docManager: DocumentManager
   ) {
     super();
     this.addClass(Voyager_CLASS);
@@ -711,8 +711,8 @@ export class VoyagerPanel_DF extends Widget {
     fileName: string,
     context: Context<DocumentRegistry.IModel>,
     isTable: boolean,
-    app: JupyterLab,
-    docManager: IDocumentManager
+    app: JupyterFrontEnd,
+    docManager: DocumentManager
   ) {
     super();
     this.addClass(Voyager_CLASS);
